@@ -52,7 +52,7 @@ class TrailTest < Test::Unit::TestCase
     )
 
     trail.extensions.replace trail.extensions.reverse
-    
+
     assert_equal(
       fixture_path("app/views/recordings/index.atom.erb"),
       trail.find("recordings/index.atom")
