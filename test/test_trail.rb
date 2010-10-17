@@ -58,4 +58,11 @@ class TrailTest < Test::Unit::TestCase
       trail.find("recordings/index.atom")
     )
   end
+
+  def test_find_with_multiple_logical_paths_returns_first_match
+    assert_equal(
+      fixture_path("app/views/recordings/index.html.erb"),
+      trail.find("recordings/index.txt", "recordings/index.html", "recordings/index.atom")
+    )
+  end
 end

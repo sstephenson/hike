@@ -9,9 +9,9 @@ module Hike
       @extensions = Extensions.new
     end
 
-    def find(logical_path)
+    def find(*logical_paths)
       @index.expire_mtimes
-      candidates = candidates_for(logical_path)
+      candidates = candidates_for_paths(logical_paths)
 
       paths.each do |path|
         candidates.each do |candidate|
@@ -24,7 +24,13 @@ module Hike
     end
 
     protected
-      def candidates_for(logical_path)
+      def candidates_for_paths(logical_paths)
+        logical_paths.map do |logical_path|
+          candidates_for_path(logical_path)
+        end.flatten
+      end
+
+      def candidates_for_path(logical_path)
         candidates = extensions.map { |ext| logical_path + ext }
         candidates.unshift(logical_path) if has_extension?(logical_path)
         candidates
