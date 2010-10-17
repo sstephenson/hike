@@ -4,11 +4,13 @@ module Hike
 
     def initialize(root)
       @root = File.expand_path(root)
+      @index = DirectoryIndex.new
       @paths = Paths.new(@root)
       @extensions = Extensions.new
     end
 
     def find(logical_path)
+      @index.expire_mtimes
       candidates = candidates_for(logical_path)
 
       paths.each do |path|
@@ -33,7 +35,8 @@ module Hike
       end
 
       def exists?(path)
-        File.exists?(path)
+        dirname, basename = File.dirname(path), File.basename(path)
+        @index.files(dirname).include?(basename)
       end
   end
 end
