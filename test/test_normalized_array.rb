@@ -1,4 +1,4 @@
-require "test_helper"
+require "hike_test"
 
 class UppercaseArray < Hike::NormalizedArray
   def normalize_element(element)

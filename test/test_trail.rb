@@ -1,4 +1,4 @@
-require "test_helper"
+require "hike_test"
 
 class TrailTest < Test::Unit::TestCase
   attr_reader :trail
