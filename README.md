@@ -10,8 +10,8 @@ Hike is a Ruby library for finding files in a set of paths.
     trail.find "hike/trail"
     # => "/Users/sam/Projects/hike/lib/hike/trail.rb"
 
-    trail.find "test_helper"
-    # => "/Users/sam/Projects/hike/test/test_helper.rb"
+    trail.find "test_trail"
+    # => "/Users/sam/Projects/hike/test/test_trail.rb"
 
 # Installation
 
