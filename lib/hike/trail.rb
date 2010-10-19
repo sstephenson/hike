@@ -10,39 +10,59 @@ module Hike
     end
 
     def find(*logical_paths)
-      @index.expire_mtimes
-      candidates = candidates_for_paths(logical_paths)
+      index.expire_mtimes
 
-      paths.each do |path|
-        candidates.each do |candidate|
-          filename = File.join(path, candidate)
-          return filename if exists?(filename)
+      logical_paths.each do |logical_path|
+        if result = find_path(logical_path)
+          return result
         end
       end
-
       nil
     end
 
     protected
-      def candidates_for_paths(logical_paths)
-        logical_paths.map do |logical_path|
-          candidates_for_path(logical_path)
-        end.flatten
+      attr_reader :index
+
+      def find_path(logical_path)
+        dirname, basename = File.split(logical_path)
+        pattern = filename_pattern_for(basename, extensions)
+
+        paths.each do |root|
+          path = File.join(root, dirname)
+          matches = match_files_in(path, pattern)
+          return File.join(path, match_from(matches, basename)) unless matches.empty?
+        end
+        nil
       end
 
-      def candidates_for_path(logical_path)
-        candidates = extensions.map { |ext| logical_path + ext }
-        candidates.unshift(logical_path) if has_extension?(logical_path)
-        candidates
+      def match_files_in(dirname, pattern)
+        index.files(dirname).grep(pattern)
       end
 
-      def has_extension?(logical_path)
+      def filename_pattern_for(basename, extensions)
+        extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
+        extension_pattern += "|" if has_registered_extension?(basename)
+        /^#{Regexp.escape(basename)}(?:#{extension_pattern})$/
+      end
+
+      def match_from(matches, basename)
+        if matches.length == 1
+          matches.first
+        elsif matches.length > 1
+          ordered_match_from(matches, basename)
+        end
+      end
+
+      def ordered_match_from(matches, basename)
+        extensions.each do |extension|
+          candidate = basename + extension
+          return candidate if matches.include?(candidate)
+        end
+        basename
+      end
+
+      def has_registered_extension?(logical_path)
         extensions.include?(File.extname(logical_path))
-      end
-
-      def exists?(path)
-        dirname, basename = File.dirname(path), File.basename(path)
-        @index.files(dirname).include?(basename)
       end
   end
 end
