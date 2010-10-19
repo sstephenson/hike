@@ -25,7 +25,7 @@ module Hike
 
       def find_path(logical_path)
         dirname, basename = File.split(logical_path)
-        pattern = filename_pattern_for(basename, extensions)
+        pattern = filename_pattern_for(basename)
 
         paths.each do |root|
           path = File.join(root, dirname)
@@ -39,7 +39,7 @@ module Hike
         index.files(dirname).grep(pattern)
       end
 
-      def filename_pattern_for(basename, extensions)
+      def filename_pattern_for(basename)
         extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
         extension_pattern += "|" if has_registered_extension?(basename)
         /^#{Regexp.escape(basename)}(?:#{extension_pattern})$/
