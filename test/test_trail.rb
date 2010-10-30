@@ -65,4 +65,11 @@ class TrailTest < Test::Unit::TestCase
       trail.find("recordings/index.txt", "recordings/index.html", "recordings/index.atom")
     )
   end
+
+  def test_find_file_in_path_root_returns_expanded_path
+    assert_equal(
+      fixture_path("app/views/index.html.erb"),
+      trail.find("index.html")
+    )
+  end
 end

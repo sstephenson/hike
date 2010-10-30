@@ -14,7 +14,7 @@ module Hike
 
       logical_paths.each do |logical_path|
         if result = find_path(logical_path)
-          return result
+          return File.expand_path(result)
         end
       end
       nil
