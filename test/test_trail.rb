@@ -5,7 +5,7 @@ class TrailTest < Test::Unit::TestCase
 
   def setup
     @trail = Hike::Trail.new(FIXTURE_ROOT)
-    @trail.paths.push "app/views", "vendor/plugins/signal_id/app/views"
+    @trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
     @trail.extensions.push "builder", ".erb"
   end
 
@@ -70,6 +70,13 @@ class TrailTest < Test::Unit::TestCase
     assert_equal(
       fixture_path("app/views/index.html.erb"),
       trail.find("index.html")
+    )
+  end
+
+  def test_find_extensionless_file
+    assert_equal(
+      fixture_path("README"),
+      trail.find("README")
     )
   end
 end

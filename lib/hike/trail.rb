@@ -41,8 +41,7 @@ module Hike
 
       def filename_pattern_for(basename)
         extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
-        extension_pattern += "|" if has_registered_extension?(basename)
-        /^#{Regexp.escape(basename)}(?:#{extension_pattern})$/
+        /^#{Regexp.escape(basename)}(?:#{extension_pattern}|)$/
       end
 
       def match_from(matches, basename)
@@ -59,10 +58,6 @@ module Hike
           return candidate if matches.include?(candidate)
         end
         basename
-      end
-
-      def has_registered_extension?(logical_path)
-        extensions.include?(File.extname(logical_path))
       end
   end
 end
