@@ -6,7 +6,7 @@ class TrailTest < Test::Unit::TestCase
   def setup
     @trail = Hike::Trail.new(FIXTURE_ROOT)
     @trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
-    @trail.extensions.push "builder", ".erb"
+    @trail.extensions.push "builder", "coffee", "str", ".erb"
   end
 
   def fixture_path(path)
@@ -77,6 +77,27 @@ class TrailTest < Test::Unit::TestCase
     assert_equal(
       fixture_path("README"),
       trail.find("README")
+    )
+  end
+
+  def test_find_file_with_multiple_extensions
+    assert_equal(
+      fixture_path("app/views/projects/project.js.coffee.erb"),
+      trail.find("projects/project.js")
+    )
+  end
+
+  def test_find_file_with_multiple_extensions_respects_extension_order
+    assert_equal(
+      fixture_path("app/views/application.js.coffee.str"),
+      trail.find("application.js")
+    )
+
+    trail.extensions.replace trail.extensions.reverse
+
+    assert_equal(
+      fixture_path("app/views/application.js.coffee.erb"),
+      trail.find("application.js")
     )
   end
 end

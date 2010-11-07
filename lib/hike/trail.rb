@@ -41,7 +41,7 @@ module Hike
 
       def filename_pattern_for(basename)
         extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
-        /^#{Regexp.escape(basename)}(?:#{extension_pattern}|)$/
+        /^#{Regexp.escape(basename)}(?:#{extension_pattern}|)+$/
       end
 
       def match_from(matches, basename)
@@ -53,11 +53,10 @@ module Hike
       end
 
       def ordered_match_from(matches, basename)
-        extensions.each do |extension|
-          candidate = basename + extension
-          return candidate if matches.include?(candidate)
-        end
-        basename
+        matches.sort_by do |match|
+          extnames = match[basename.length..-1].scan(/.[^.]+/)
+          extnames.inject(0) { |sum, ext| sum + extensions.index(ext) + 1 }
+        end.first
       end
   end
 end
