@@ -2,73 +2,48 @@ require "hike_test"
 require "fileutils"
 
 class DirectoryIndexTest < Test::Unit::TestCase
+  include FileUtils
+
   def setup
     @root = File.join(FIXTURE_ROOT, "tmp")
     @index = Hike::DirectoryIndex.new
-    @mtime = Time.now - 1
 
-    FileUtils.mkdir_p @root
-    FileUtils.mkdir_p File.join(@root, "baz")
-    touch "foo.txt", @mtime
-    touch "bar.txt", @mtime
-    touch nil, @mtime
+    mkdir_p @root
+    mkdir_p fixture_path("baz")
+    touch fixture_path("foo.txt")
+    touch fixture_path("bar.txt")
   end
 
   def teardown
-    FileUtils.rm_rf @root
-  end
-
-  def touch(filename, timestamp = Time.now)
-    if filename
-      path = fixture_path(filename)
-      FileUtils.touch(path)
-    else
-      path = @root
-    end
-    File.utime(timestamp, timestamp, path)
+    rm_rf @root
   end
 
   def fixture_path(path)
     File.join(@root, path)
   end
 
-  def test_mtime
-    assert_equal @mtime.to_i, @index.mtime(@root).to_i
-    assert_equal false, @index.mtime(fixture_path("foo.txt"))
-    assert_equal false, @index.mtime(fixture_path("nonexistent"))
+  def test_entries
+    assert_equal ["bar.txt", "baz", "foo.txt"], @index.entries(@root)
+    assert_equal [], @index.entries(fixture_path("baz"))
   end
 
   def test_files
-    assert_equal ["bar.txt", "foo.txt"], @index.files(@root).sort
+    assert_equal ["bar.txt", "foo.txt"], @index.files(@root)
     assert_equal [], @index.files(fixture_path("foo.txt"))
     assert_equal [], @index.files(fixture_path("nonexistent"))
   end
 
-  def test_mtime_is_cached
-    mtime = @index.mtime(@root)
-    touch "baz.txt"
-    assert_equal mtime, @index.mtime(@root)
-  end
-
   def test_files_are_cached
     files = @index.files(@root)
-    touch "baz.txt"
+    touch fixture_path("baz.txt")
     assert_equal files, @index.files(@root)
   end
 
-  def test_expiring_mtime_cache
-    mtime = @index.mtime(@root)
-    touch "baz.txt"
-    @index.expire_mtimes
-    assert mtime < @index.mtime(@root)
-    assert @index.files(@root).include?("baz.txt")
-  end
-
-  def test_expiring_file_cache
-    mtime = @index.mtime(@root)
-    touch "baz.txt"
-    @index.expire_files
-    assert_equal mtime, @index.mtime(@root)
+  def test_expire_cache
+    assert !@index.files(@root).include?("baz.txt")
+    touch fixture_path("baz.txt")
+    assert !@index.files(@root).include?("baz.txt")
+    @index.expire_cache
     assert @index.files(@root).include?("baz.txt")
   end
 end

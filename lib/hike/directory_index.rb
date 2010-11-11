@@ -1,44 +1,31 @@
 module Hike
   class DirectoryIndex
     def initialize
-      expire
+      expire_cache
     end
 
-    def expire
-      expire_mtimes
-      expire_files
-    end
-
-    def expire_mtimes
-      @mtimes = {}
-      true
-    end
-
-    def expire_files
+    def expire_cache
+      @entries = {}
       @files = {}
       true
     end
 
-    def mtime(dirname)
-      @mtimes[dirname] ||= File.directory?(dirname) && File.mtime(dirname)
+    def entries(dirname)
+      dirname = File.expand_path(dirname)
+      @entries[dirname] ||= if File.directory?(dirname)
+        Dir.entries(dirname).reject do |entry|
+          entry =~ /^\.\.?$/
+        end.sort
+      else
+        []
+      end
     end
 
     def files(dirname)
-      if current_mtime = mtime(dirname)
-        cached_mtime, files = @files[dirname]
-        if current_mtime == cached_mtime
-          return files
-        else
-          files = Dir.entries(dirname).select do |entry|
-            File.file?(File.join(dirname, entry))
-          end
-        end
-      else
-        files = []
+      dirname = File.expand_path(dirname)
+      @files[dirname] ||= entries(dirname).select do |entry|
+        File.file?(File.join(dirname, entry))
       end
-
-      @files[dirname] = [current_mtime, files]
-      files
     end
   end
 end

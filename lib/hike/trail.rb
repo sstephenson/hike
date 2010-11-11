@@ -10,7 +10,7 @@ module Hike
     end
 
     def find(*logical_paths)
-      index.expire_mtimes
+      index.expire_cache
 
       logical_paths.each do |logical_path|
         if result = find_path(logical_path)
