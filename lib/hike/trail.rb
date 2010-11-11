@@ -2,7 +2,7 @@ module Hike
   class Trail
     attr_reader :root, :paths, :extensions
 
-    def initialize(root)
+    def initialize(root = ".")
       @root = File.expand_path(root)
       @index = DirectoryIndex.new
       @paths = Paths.new(@root)

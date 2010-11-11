@@ -13,6 +13,13 @@ class TrailTest < Test::Unit::TestCase
     File.expand_path(File.join(FIXTURE_ROOT, path))
   end
 
+  def test_root_defaults_to_cwd
+    Dir.chdir(FIXTURE_ROOT) do
+      trail = Hike::Trail.new
+      assert_equal FIXTURE_ROOT, trail.root
+    end
+  end
+
   def test_find_nonexistent_file
     assert_nil trail.find("people/show.html")
   end
