@@ -13,7 +13,7 @@ module Hike
         value = normalize_element(value)
       end
 
-      super *args.concat([value])
+      super(*args.concat([value]))
     end
 
     def <<(element)
@@ -34,7 +34,7 @@ module Hike
     end
 
     def push(*elements)
-      super *normalize_elements(elements)
+      super(*normalize_elements(elements))
     end
 
     def replace(elements)
@@ -42,7 +42,7 @@ module Hike
     end
 
     def unshift(*elements)
-      super *normalize_elements(elements)
+      super(*normalize_elements(elements))
     end
 
     def normalize_elements(elements)
