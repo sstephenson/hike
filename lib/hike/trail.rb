@@ -10,12 +10,21 @@ module Hike
     end
 
     def find(*logical_paths)
+      options = logical_paths.last.is_a?(Hash) ? logical_paths.pop : {}
+      if relative_to = options[:relative_to]
+        base_path = File.dirname(relative_to)
+      end
+
       index.expire_cache
 
       logical_paths.each do |logical_path|
-        if result = find_path(logical_path)
-          return File.expand_path(result)
+        if relative_to
+          result = find_path_relative(logical_path, base_path)
+        else
+          result = find_path(logical_path)
         end
+
+        return File.expand_path(result) if result
       end
       nil
     end
@@ -27,12 +36,27 @@ module Hike
         dirname, basename = File.split(logical_path)
         pattern = filename_pattern_for(basename)
 
-        paths.each do |root|
-          path = File.join(root, dirname)
-          matches = match_files_in(path, pattern)
-          return File.join(path, match_from(matches, basename)) unless matches.empty?
+        paths.each do |base_path|
+          if path = find_in_base(File.join(base_path, dirname), basename, pattern)
+            return path
+          end
         end
         nil
+      end
+
+      def find_path_relative(logical_path, base_path)
+        dirname, basename = File.split(File.join(base_path, logical_path))
+        dirname = File.expand_path(dirname)
+        pattern = filename_pattern_for(basename)
+
+        if paths.any? { |path| dirname[0, path.length] == path }
+          find_in_base(File.expand_path(dirname), basename, pattern)
+        end
+      end
+
+      def find_in_base(base_path, base_name, pattern)
+        matches = match_files_in(base_path, pattern)
+        File.join(base_path, match_from(matches, base_name)) unless matches.empty?
       end
 
       def match_files_in(dirname, pattern)

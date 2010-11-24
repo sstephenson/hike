@@ -107,4 +107,15 @@ class TrailTest < Test::Unit::TestCase
       trail.find("application.js")
     )
   end
+
+  def test_find_file_relative_to_another_file
+    assert_equal(
+      fixture_path("app/views/projects/index.html.erb"),
+      trail.find("index.html", :relative_to => fixture_path("app/views/projects/project.js.coffee.erb"))
+    )
+  end
+
+  def test_relative_files_must_exist_in_the_path
+    assert_nil trail.find("../hike_test.rb", :relative_to => fixture_path("README"))
+  end
 end
