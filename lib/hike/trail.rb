@@ -15,72 +15,77 @@ module Hike
         base_path = File.dirname(relative_to)
       end
 
-      index.expire_cache
+      reset!
 
-      logical_paths.each do |logical_path|
+      searching(logical_paths) do |logical_path|
         if relative_to
-          result = find_path_relative(logical_path, base_path)
+          find_in_base_path(logical_path, base_path)
         else
-          result = find_path(logical_path)
+          find_in_paths(logical_path)
         end
-
-        return File.expand_path(result) if result
       end
-      nil
     end
 
     protected
-      attr_reader :index
+      def reset!
+        @index.expire_cache
+        @patterns = {}
+      end
 
-      def find_path(logical_path)
+      def find_in_paths(logical_path)
         dirname, basename = File.split(logical_path)
-        pattern = filename_pattern_for(basename)
-
-        paths.each do |base_path|
-          if path = find_in_base(File.join(base_path, dirname), basename, pattern)
-            return path
-          end
-        end
-        nil
-      end
-
-      def find_path_relative(logical_path, base_path)
-        dirname, basename = File.split(File.join(base_path, logical_path))
-        dirname = File.expand_path(dirname)
-        pattern = filename_pattern_for(basename)
-
-        if paths.any? { |path| dirname[0, path.length] == path }
-          find_in_base(File.expand_path(dirname), basename, pattern)
+        searching(paths) do |base_path|
+          match(File.join(base_path, dirname), basename)
         end
       end
 
-      def find_in_base(base_path, base_name, pattern)
-        matches = match_files_in(base_path, pattern)
-        File.join(base_path, match_from(matches, base_name)) unless matches.empty?
+      def find_in_base_path(logical_path, base_path)
+        candidate = File.expand_path(File.join(base_path, logical_path))
+        dirname, basename = File.split(candidate)
+        match(dirname, basename) if paths_contain?(dirname)
       end
 
-      def match_files_in(dirname, pattern)
-        index.files(dirname).grep(pattern)
+      def match(dirname, basename)
+        matches = @index.files(dirname).grep(pattern_for(basename))
+        unless matches.empty?
+          path = select_match_from(matches, basename)
+          File.expand_path(File.join(dirname, path))
+        end
       end
 
-      def filename_pattern_for(basename)
-        extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
-        /^#{Regexp.escape(basename)}(?:#{extension_pattern}|)+$/
+      def paths_contain?(dirname)
+        paths.any? { |path| dirname[0, path.length] == path }
       end
 
-      def match_from(matches, basename)
+      def pattern_for(basename)
+        @patterns[basename] ||= begin
+          extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
+          /^#{Regexp.escape(basename)}(?:#{extension_pattern}|)+$/
+        end
+      end
+
+      def select_match_from(matches, basename)
         if matches.length == 1
           matches.first
         elsif matches.length > 1
-          ordered_match_from(matches, basename)
+          select_ordered_match_from(matches, basename)
         end
       end
 
-      def ordered_match_from(matches, basename)
+      def select_ordered_match_from(matches, basename)
         matches.sort_by do |match|
           extnames = match[basename.length..-1].scan(/.[^.]+/)
           extnames.inject(0) { |sum, ext| sum + extensions.index(ext) + 1 }
         end.first
+      end
+
+      def searching(collection)
+        collection.each do |value|
+          if result = yield(value)
+            return result
+          end
+        end
+        nil
       end
   end
 end
