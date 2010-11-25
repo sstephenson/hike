@@ -108,14 +108,26 @@ class TrailTest < Test::Unit::TestCase
     )
   end
 
-  def test_find_file_relative_to_another_file
+  def test_find_with_base_path_option_and_relative_logical_path
     assert_equal(
       fixture_path("app/views/projects/index.html.erb"),
-      trail.find("index.html", :relative_to => fixture_path("app/views/projects/project.js.coffee.erb"))
+      trail.find("./index.html", :base_path => fixture_path("app/views/projects"))
     )
   end
 
+  def test_find_ignores_base_path_option_when_logical_path_is_not_relative
+    assert_equal(
+      fixture_path("app/views/index.html.erb"),
+      trail.find("index.html", :base_path => fixture_path("app/views/projects"))
+    )
+  end
+
+  def test_base_path_option_must_be_expanded
+    assert_nil trail.find("./index.html", :base_path => "app/views/projects")
+  end
+
   def test_relative_files_must_exist_in_the_path
-    assert_nil trail.find("../hike_test.rb", :relative_to => fixture_path("README"))
+    assert File.exist?(File.join(FIXTURE_ROOT, "../hike_test.rb"))
+    assert_nil trail.find("../hike_test.rb", :base_path => FIXTURE_ROOT)
   end
 end

@@ -10,15 +10,12 @@ module Hike
     end
 
     def find(*logical_paths)
-      options = logical_paths.last.is_a?(Hash) ? logical_paths.pop : {}
-      if relative_to = options[:relative_to]
-        base_path = File.dirname(relative_to)
-      end
-
+      options = extract_options!(logical_paths)
+      base_path = options[:base_path] || root
       reset!
 
       searching(logical_paths) do |logical_path|
-        if relative_to
+        if relative?(logical_path)
           find_in_base_path(logical_path, base_path)
         else
           find_in_paths(logical_path)
@@ -30,6 +27,14 @@ module Hike
       def reset!
         @index.expire_cache
         @patterns = {}
+      end
+
+      def extract_options!(arguments)
+        arguments.last.is_a?(Hash) ? arguments.pop : {}
+      end
+
+      def relative?(logical_path)
+        logical_path =~ /^\.\.?\//
       end
 
       def find_in_paths(logical_path)
