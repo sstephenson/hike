@@ -38,7 +38,7 @@ module Hike
       end
 
       def find_in_paths(logical_path)
-        dirname, basename = File.split(logical_path)
+        dirname, basename = File.split(logical_path.gsub(/\/\//,'/'))
         searching(paths) do |base_path|
           match(File.join(base_path, dirname), basename)
         end
