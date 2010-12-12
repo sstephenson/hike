@@ -1,3 +1,5 @@
+require 'pathname'
+
 module Hike
   class Paths < NormalizedArray
     def initialize(root = ".")
@@ -6,7 +8,8 @@ module Hike
     end
 
     def normalize_element(path)
-      path = File.join(@root, path) unless path[/^\//]
+	  pathname = Pathname(path)
+      path = File.join(@root, path) if pathname.relative?
       File.expand_path(path)
     end
   end
