@@ -130,4 +130,26 @@ class TrailTest < Test::Unit::TestCase
     assert File.exist?(File.join(FIXTURE_ROOT, "../hike_test.rb"))
     assert_nil trail.find("../hike_test.rb", :base_path => FIXTURE_ROOT)
   end
+
+  def test_find_all_respects_path_order
+    results = []
+    trail.find("layouts/interstitial.html") do |path|
+      results << path
+    end
+    assert_equal [
+      fixture_path("app/views/layouts/interstitial.html.erb"),
+      fixture_path("vendor/plugins/signal_id/app/views/layouts/interstitial.html.erb")
+    ], results
+  end
+
+  def test_find_all_with_multiple_extensions_respects_extension_order
+    results = []
+    trail.find("application.js") do |path|
+      results << path
+    end
+    assert_equal [
+      fixture_path("app/views/application.js.coffee.str"),
+      fixture_path("app/views/application.js.coffee.erb")
+    ], results
+  end
 end

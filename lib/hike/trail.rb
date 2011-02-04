@@ -9,16 +9,24 @@ module Hike
       @extensions = Extensions.new
     end
 
-    def find(*logical_paths)
-      options = extract_options!(logical_paths)
-      base_path = options[:base_path] || root
-      reset!
+    def find(*logical_paths, &block)
+      if block_given?
+        options = extract_options!(logical_paths)
+        base_path = options[:base_path] || root
+        reset!
 
-      searching(logical_paths) do |logical_path|
-        if relative?(logical_path)
-          find_in_base_path(logical_path, base_path)
-        else
-          find_in_paths(logical_path)
+        logical_paths.each do |logical_path|
+          if relative?(logical_path)
+            find_in_base_path(logical_path, base_path, &block)
+          else
+            find_in_paths(logical_path, &block)
+          end
+        end
+
+        nil
+      else
+        find(*logical_paths) do |path|
+          return path
         end
       end
     end
@@ -37,24 +45,23 @@ module Hike
         logical_path =~ /^\.\.?\//
       end
 
-      def find_in_paths(logical_path)
+      def find_in_paths(logical_path, &block)
         dirname, basename = File.split(logical_path)
-        searching(paths) do |base_path|
-          match(File.join(base_path, dirname), basename)
+        paths.each do |base_path|
+          match(File.join(base_path, dirname), basename, &block)
         end
       end
 
-      def find_in_base_path(logical_path, base_path)
+      def find_in_base_path(logical_path, base_path, &block)
         candidate = File.expand_path(File.join(base_path, logical_path))
         dirname, basename = File.split(candidate)
-        match(dirname, basename) if paths_contain?(dirname)
+        match(dirname, basename, &block) if paths_contain?(dirname)
       end
 
       def match(dirname, basename)
         matches = @index.files(dirname).grep(pattern_for(basename))
-        unless matches.empty?
-          path = select_match_from(matches, basename)
-          File.expand_path(File.join(dirname, path))
+        sort_matches(matches, basename).each do |path|
+          yield File.expand_path(File.join(dirname, path))
         end
       end
 
@@ -69,28 +76,11 @@ module Hike
         end
       end
 
-      def select_match_from(matches, basename)
-        if matches.length == 1
-          matches.first
-        elsif matches.length > 1
-          select_ordered_match_from(matches, basename)
-        end
-      end
-
-      def select_ordered_match_from(matches, basename)
+      def sort_matches(matches, basename)
         matches.sort_by do |match|
           extnames = match[basename.length..-1].scan(/.[^.]+/)
           extnames.inject(0) { |sum, ext| sum + extensions.index(ext) + 1 }
-        end.first
-      end
-
-      def searching(collection)
-        collection.each do |value|
-          if result = yield(value)
-            return result
-          end
         end
-        nil
       end
   end
 end
