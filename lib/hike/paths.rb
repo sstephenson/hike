@@ -8,7 +8,7 @@ module Hike
     end
 
     def normalize_element(path)
-      pathname = Pathname(path)
+      pathname = Pathname.new(path)
       path = File.join(@root, path) if pathname.relative?
       File.expand_path(path)
     end
