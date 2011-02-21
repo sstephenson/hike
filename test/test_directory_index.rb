@@ -23,7 +23,7 @@ class DirectoryIndexTest < Test::Unit::TestCase
   end
 
   def test_entries
-    assert_equal ["bar.txt", "baz", "foo.txt"], @index.entries(@root)
+    assert_equal ["bar.txt", "baz", "foo.txt"], @index.entries(@root).map(&:to_s)
     assert_equal [], @index.entries(fixture_path("baz"))
   end
 

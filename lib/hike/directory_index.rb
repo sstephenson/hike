@@ -1,3 +1,5 @@
+require 'pathname'
+
 module Hike
   class DirectoryIndex
     def initialize
@@ -11,10 +13,10 @@ module Hike
     end
 
     def entries(dirname)
-      dirname = File.expand_path(dirname)
-      @entries[dirname] ||= if File.directory?(dirname)
-        Dir.entries(dirname).reject do |entry|
-          entry =~ /^\.\.?$/
+      dirname = Pathname.new(dirname).expand_path
+      @entries[dirname] ||= if dirname.directory?
+        dirname.entries.reject do |entry|
+          entry.to_s =~ /^\.\.?$/
         end.sort
       else
         []
@@ -22,10 +24,10 @@ module Hike
     end
 
     def files(dirname)
-      dirname = File.expand_path(dirname)
+      dirname = Pathname.new(dirname).expand_path
       @files[dirname] ||= entries(dirname).select do |entry|
-        File.file?(File.join(dirname, entry))
-      end
+        dirname.join(entry).file?
+      end.map(&:to_s)
     end
   end
 end

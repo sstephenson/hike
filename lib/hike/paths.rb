@@ -3,14 +3,14 @@ require 'pathname'
 module Hike
   class Paths < NormalizedArray
     def initialize(root = ".")
-      @root = root
+      @root = Pathname.new(root)
       super()
     end
 
     def normalize_element(path)
-      pathname = Pathname.new(path)
-      path = File.join(@root, path) if pathname.relative?
-      File.expand_path(path)
+      path = Pathname.new(path)
+      path = @root.join(path) if path.relative?
+      path.expand_path.to_s
     end
   end
 end
