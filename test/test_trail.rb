@@ -38,6 +38,13 @@ class TrailTest < Test::Unit::TestCase
     )
   end
 
+  def test_find_with_leading_slash
+    assert_equal(
+      fixture_path("app/views/projects/index.html.erb"),
+      trail.find("/projects/index.html")
+    )
+  end
+
   def test_find_respects_path_order
     assert_equal(
       fixture_path("app/views/layouts/interstitial.html.erb"),

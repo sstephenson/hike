@@ -25,7 +25,8 @@ module Hike
         options[:patterns_cache] = {}
 
         logical_paths.each do |logical_path|
-          logical_path = Pathname.new(logical_path)
+          logical_path = Pathname.new(logical_path.sub(/^\//, ''))
+
           if relative?(logical_path)
             find_in_base_path(logical_path, base_path, options, &block)
           else
