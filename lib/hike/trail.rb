@@ -19,14 +19,17 @@ module Hike
         options = extract_options!(logical_paths)
         base_path = Pathname.new(options[:base_path] || @root)
 
-        cache = { :index => DirectoryIndex.new, :patterns => {} }
+        options[:directories] ||= false
+
+        options[:index_cache]    = DirectoryIndex.new
+        options[:patterns_cache] = {}
 
         logical_paths.each do |logical_path|
           logical_path = Pathname.new(logical_path)
           if relative?(logical_path)
-            find_in_base_path(cache, logical_path, base_path, &block)
+            find_in_base_path(logical_path, base_path, options, &block)
           else
-            find_in_paths(cache, logical_path, &block)
+            find_in_paths(logical_path, options, &block)
           end
         end
 
@@ -40,7 +43,7 @@ module Hike
 
     protected
       def extract_options!(arguments)
-        arguments.last.is_a?(Hash) ? arguments.pop : {}
+        arguments.last.is_a?(Hash) ? arguments.pop.dup : {}
       end
 
       def relative?(logical_path)
@@ -51,22 +54,26 @@ module Hike
         paths.map { |path| Pathname.new(path) }
       end
 
-      def find_in_paths(cache, logical_path, &block)
+      def find_in_paths(logical_path, options, &block)
         dirname, basename = logical_path.split
         pathnames.each do |base_path|
-          match(cache, base_path.join(dirname), basename, &block)
+          match(base_path.join(dirname), basename, options, &block)
         end
       end
 
-      def find_in_base_path(cache, logical_path, base_path, &block)
+      def find_in_base_path(logical_path, base_path, options, &block)
         candidate = base_path.join(logical_path).expand_path
         dirname, basename = candidate.split
-        match(cache, dirname, basename, &block) if paths_contain?(dirname)
+        match(dirname, basename, options, &block) if paths_contain?(dirname)
       end
 
-      def match(cache, dirname, basename)
-        matches = cache[:index].files(dirname).grep(pattern_for(cache, basename))
-        matches = matches.map { |f| Pathname.new(f) }
+      def match(dirname, basename, options)
+        index   = options[:index_cache]
+        pattern = pattern_for(basename, options)
+
+        matches = options[:directories] ? index.entries(dirname) : index.files(dirname)
+        matches = matches.select { |m| m.to_s =~ pattern }
+
         sort_matches(matches, basename).each do |path|
           yield dirname.join(path).expand_path.to_s
         end
@@ -76,8 +83,8 @@ module Hike
         paths.any? { |path| dirname.to_s[0, path.to_s.length] == path }
       end
 
-      def pattern_for(cache, basename)
-        cache[:patterns][basename] ||= begin
+      def pattern_for(basename, options)
+        options[:patterns_cache][basename] ||= begin
           extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
           /^#{Regexp.escape(basename.to_s)}(?:#{extension_pattern}|)+$/
         end

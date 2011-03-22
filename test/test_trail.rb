@@ -152,4 +152,29 @@ class TrailTest < Test::Unit::TestCase
       fixture_path("app/views/application.js.coffee.erb")
     ], results
   end
+
+  def test_find_filename_instead_directory
+    assert_equal(
+      fixture_path("app/views/projects.erb"),
+      trail.find("projects")
+    )
+  end
+
+  def test_ignores_directories
+    assert_nil trail.find("recordings")
+  end
+
+  def test_find_directory_with_directories_option
+    assert_equal(
+      fixture_path("app/views/recordings"),
+      trail.find("recordings", :directories => true)
+    )
+  end
+
+  def test_find_directory_instead_of_file_with_directories_option
+    assert_equal(
+      fixture_path("app/views/projects"),
+      trail.find("projects", :directories => true)
+    )
+  end
 end
