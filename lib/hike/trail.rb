@@ -6,7 +6,6 @@ module Hike
 
     def initialize(root = ".")
       @root = Pathname.new(root).expand_path
-      @index = DirectoryIndex.new
       @paths = Paths.new(@root)
       @extensions = Extensions.new
     end
@@ -19,14 +18,15 @@ module Hike
       if block_given?
         options = extract_options!(logical_paths)
         base_path = Pathname.new(options[:base_path] || @root)
-        reset!
 
-        logical_paths.each do |logical_path|
-          logical_path = Pathname.new(logical_path)
-          if relative?(logical_path)
-            find_in_base_path(logical_path, base_path, &block)
-          else
-            find_in_paths(logical_path, &block)
+        with_index_cache do
+          logical_paths.each do |logical_path|
+            logical_path = Pathname.new(logical_path)
+            if relative?(logical_path)
+              find_in_base_path(logical_path, base_path, &block)
+            else
+              find_in_paths(logical_path, &block)
+            end
           end
         end
 
@@ -39,9 +39,27 @@ module Hike
     end
 
     protected
-      def reset!
-        @index.expire_cache
-        @patterns = {}
+      def with_index_cache
+        self.cache = { :index => DirectoryIndex.new, :patterns => {} }
+        yield
+      ensure
+        self.cache = nil
+      end
+
+      def cache
+        Thread.current[:__hike_cache__]
+      end
+
+      def cache=(value)
+        Thread.current[:__hike_cache__] = value
+      end
+
+      def index
+        cache[:index]
+      end
+
+      def patterns
+        cache[:patterns]
       end
 
       def extract_options!(arguments)
@@ -70,7 +88,7 @@ module Hike
       end
 
       def match(dirname, basename)
-        matches = @index.files(dirname).grep(pattern_for(basename))
+        matches = index.files(dirname).grep(pattern_for(basename))
         matches = matches.map { |f| Pathname.new(f) }
         sort_matches(matches, basename).each do |path|
           yield dirname.join(path).expand_path.to_s
@@ -82,7 +100,7 @@ module Hike
       end
 
       def pattern_for(basename)
-        @patterns[basename] ||= begin
+        patterns[basename] ||= begin
           extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
           /^#{Regexp.escape(basename.to_s)}(?:#{extension_pattern}|)+$/
         end
