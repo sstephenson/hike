@@ -3,13 +3,8 @@ require 'pathname'
 module Hike
   class DirectoryIndex
     def initialize
-      expire_cache
-    end
-
-    def expire_cache
       @entries = {}
       @files = {}
-      true
     end
 
     def entries(dirname)

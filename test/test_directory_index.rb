@@ -39,12 +39,4 @@ class DirectoryIndexTest < Test::Unit::TestCase
     touch fixture_path("baz.txt")
     assert_equal files, @index.files(@root)
   end
-
-  def test_expire_cache
-    assert !@index.files(@root).include?("baz.txt")
-    touch fixture_path("baz.txt")
-    assert !@index.files(@root).include?("baz.txt")
-    @index.expire_cache
-    assert @index.files(@root).include?("baz.txt")
-  end
 end
