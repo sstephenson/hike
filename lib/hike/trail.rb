@@ -1,4 +1,7 @@
 require 'pathname'
+require 'hike/directory_index'
+require 'hike/extensions'
+require 'hike/paths'
 
 module Hike
   class Trail

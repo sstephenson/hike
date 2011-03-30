@@ -1,4 +1,5 @@
 require 'pathname'
+require 'hike/normalized_array'
 
 module Hike
   class Paths < NormalizedArray
