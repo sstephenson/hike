@@ -13,7 +13,6 @@ module Hike
     end
 
     def entries(dirname)
-      dirname = Pathname.new(dirname).expand_path
       @entries[dirname] ||= if dirname.directory?
         dirname.entries.reject do |entry|
           entry.to_s =~ /^\.\.?$/
@@ -24,7 +23,6 @@ module Hike
     end
 
     def files(dirname)
-      dirname = Pathname.new(dirname).expand_path
       @files[dirname] ||= entries(dirname).select do |entry|
         dirname.join(entry).file?
       end.map(&:to_s)
