@@ -1,5 +1,4 @@
 require 'pathname'
-require 'hike/directory_index'
 require 'hike/extensions'
 require 'hike/paths'
 
@@ -24,7 +23,8 @@ module Hike
 
         options[:directories] ||= false
 
-        options[:index_cache]    = DirectoryIndex.new
+        options[:stat_cache]     = {}
+        options[:entries_cache]  = {}
         options[:patterns_cache] = {}
 
         logical_paths.each do |logical_path|
@@ -66,29 +66,53 @@ module Hike
       end
 
       def find_in_base_path(logical_path, base_path, options, &block)
-        candidate = base_path.join(logical_path).expand_path
+        candidate = base_path.join(logical_path)
         dirname, basename = candidate.split
         match(dirname, basename, options, &block) if paths_contain?(dirname)
       end
 
       def match(dirname, basename, options)
-        index   = options[:index_cache]
-        pattern = pattern_for(basename, options)
+        matches = entries(options[:entries_cache], dirname)
 
-        matches = options[:directories] ? index.entries(dirname) : index.files(dirname)
+        pattern = pattern_for(options[:patterns_cache], basename)
         matches = matches.select { |m| m.to_s =~ pattern }
 
+        cache = options[:stat_cache]
         sort_matches(matches, basename).each do |path|
-          yield dirname.join(path).expand_path.to_s
+          pathname = dirname.join(path)
+
+          if options[:directories]
+            yield pathname.to_s
+          elsif (stat = self.stat(cache, pathname)) && stat.file?
+            yield pathname.to_s
+          end
         end
+      end
+
+      def stat(cache, pathname)
+        if cache.key?(pathname)
+          cache[pathname]
+        else
+          begin
+            cache[pathname] = pathname.stat
+          rescue Errno::ENOENT
+            cache[pathname] = nil
+          end
+        end
+      end
+
+      def entries(cache, pathname)
+        cache[pathname] ||= pathname.entries.reject { |entry| entry.to_s =~ /^\.\.?$/ }
+      rescue Errno::ENOENT
+        cache[pathname] = []
       end
 
       def paths_contain?(dirname)
         paths.any? { |path| dirname.to_s[0, path.to_s.length] == path }
       end
 
-      def pattern_for(basename, options)
-        options[:patterns_cache][basename] ||= begin
+      def pattern_for(cache, basename)
+        cache[basename] ||= begin
           extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
           /^#{Regexp.escape(basename.to_s)}(?:#{extension_pattern}|)+$/
         end
