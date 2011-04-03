@@ -19,15 +19,13 @@ module Hike
         options = extract_options!(logical_paths)
         base_path = Pathname.new(options[:base_path] || @root)
 
-        options[:directories] ||= false
-
         logical_paths.each do |logical_path|
           logical_path = Pathname.new(logical_path.sub(/^\//, ''))
 
           if relative?(logical_path)
-            find_in_base_path(logical_path, base_path, options, &block)
+            find_in_base_path(logical_path, base_path, &block)
           else
-            find_in_paths(logical_path, options, &block)
+            find_in_paths(logical_path, &block)
           end
         end
 
@@ -48,20 +46,20 @@ module Hike
         logical_path.to_s =~ /^\.\.?\//
       end
 
-      def find_in_paths(logical_path, options, &block)
+      def find_in_paths(logical_path, &block)
         dirname, basename = logical_path.split
         paths.each do |base_path|
-          match(base_path.join(dirname), basename, options, &block)
+          match(base_path.join(dirname), basename, &block)
         end
       end
 
-      def find_in_base_path(logical_path, base_path, options, &block)
+      def find_in_base_path(logical_path, base_path, &block)
         candidate = base_path.join(logical_path)
         dirname, basename = candidate.split
-        match(dirname, basename, options, &block) if paths_contain?(dirname)
+        match(dirname, basename, &block) if paths_contain?(dirname)
       end
 
-      def match(dirname, basename, options)
+      def match(dirname, basename)
         matches = entries(dirname)
 
         pattern = pattern_for(basename)
@@ -69,10 +67,9 @@ module Hike
 
         sort_matches(matches, basename).each do |path|
           pathname = dirname.join(path)
+          stat     = stat(pathname)
 
-          if options[:directories]
-            yield pathname.to_s
-          elsif (stat = self.stat(pathname)) && stat.file?
+          if stat && stat.file?
             yield pathname.to_s
           end
         end
