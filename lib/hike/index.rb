@@ -2,16 +2,25 @@ require 'pathname'
 
 module Hike
   class Index
-    attr_reader :root, :paths, :extensions
+    attr_reader :paths, :extensions
 
     def initialize(root, paths, extensions)
-      @root       = Pathname.new(root).expand_path
-      @paths      = paths.map { |path| Pathname.new(path).expand_path }
-      @extensions = extensions.to_a
+      @root       = root
+      @paths      = paths.dup.freeze
+      @extensions = extensions.dup.freeze
+      @pathnames  = paths.map { |path| Pathname.new(path) }
 
       @stats    = {}
       @entries  = {}
       @patterns = {}
+    end
+
+    def root
+      @root.to_s
+    end
+
+    def index
+      self
     end
 
     def find(*logical_paths, &block)
@@ -48,7 +57,7 @@ module Hike
 
       def find_in_paths(logical_path, &block)
         dirname, basename = logical_path.split
-        paths.each do |base_path|
+        @pathnames.each do |base_path|
           match(base_path.join(dirname), basename, &block)
         end
       end
@@ -94,7 +103,7 @@ module Hike
       end
 
       def paths_contain?(dirname)
-        paths.any? { |path| dirname.to_s[0, path.to_s.length] == path.to_s }
+        paths.any? { |path| dirname.to_s[0, path.length] == path }
       end
 
       def pattern_for(basename)

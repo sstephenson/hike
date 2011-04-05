@@ -1,23 +1,29 @@
 require "hike_test"
+require "fileutils"
 
-class TrailTest < Test::Unit::TestCase
-  attr_reader :trail
-
-  def setup
-    @trail = Hike::Trail.new(FIXTURE_ROOT)
-    @trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
-    @trail.extensions.push "builder", "coffee", "str", ".erb"
-  end
-
+module TrailTests
   def fixture_path(path)
     File.expand_path(File.join(FIXTURE_ROOT, path))
   end
 
-  def test_root_defaults_to_cwd
-    Dir.chdir(FIXTURE_ROOT) do
-      trail = Hike::Trail.new
-      assert_equal FIXTURE_ROOT, trail.root
-    end
+  def test_root
+    assert_equal FIXTURE_ROOT, trail.root
+  end
+
+  def test_paths
+    assert_equal [
+      fixture_path("app/views"),
+      fixture_path("vendor/plugins/signal_id/app/views"),
+      fixture_path(".")
+    ], trail.paths
+  end
+
+  def test_extensions
+    assert_equal [".builder", ".coffee", ".str", ".erb"], trail.extensions
+  end
+
+  def test_index
+    assert_kind_of Hike::Index, trail.index
   end
 
   def test_find_nonexistent_file
@@ -51,7 +57,7 @@ class TrailTest < Test::Unit::TestCase
       trail.find("layouts/interstitial.html")
     )
 
-    trail.paths.replace trail.paths.reverse
+    trail = new_trail { |t| t.paths.replace t.paths.reverse }
 
     assert_equal(
       fixture_path("vendor/plugins/signal_id/app/views/layouts/interstitial.html.erb"),
@@ -65,7 +71,7 @@ class TrailTest < Test::Unit::TestCase
       trail.find("recordings/index.atom")
     )
 
-    trail.extensions.replace trail.extensions.reverse
+    trail = new_trail { |t| t.extensions.replace t.extensions.reverse }
 
     assert_equal(
       fixture_path("app/views/recordings/index.atom.erb"),
@@ -107,7 +113,7 @@ class TrailTest < Test::Unit::TestCase
       trail.find("application.js")
     )
 
-    trail.extensions.replace trail.extensions.reverse
+    trail = new_trail { |t| t.extensions.replace t.extensions.reverse }
 
     assert_equal(
       fixture_path("app/views/application.js.coffee.erb"),
@@ -169,5 +175,96 @@ class TrailTest < Test::Unit::TestCase
 
   def test_ignores_directories
     assert_nil trail.find("recordings")
+  end
+end
+
+class TrailTest < Test::Unit::TestCase
+  attr_reader :trail
+
+  def new_trail
+    trail = Hike::Trail.new(FIXTURE_ROOT)
+    trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
+    trail.extensions.push "builder", "coffee", "str", ".erb"
+    yield trail if block_given?
+    trail
+  end
+
+  def setup
+    @trail = new_trail
+  end
+
+  def test_root_defaults_to_cwd
+    Dir.chdir(FIXTURE_ROOT) do
+      trail = Hike::Trail.new
+      assert_equal FIXTURE_ROOT, trail.root
+    end
+  end
+
+  def test_find_reflects_changes_in_the_file_system
+    assert_nil trail.find("people.html")
+    FileUtils.touch fixture_path("people.html")
+    assert_equal fixture_path("people.html"), trail.find("people.html")
+  ensure
+    FileUtils.rm fixture_path("people.html")
+    assert !File.exist?(fixture_path("people.html"))
+  end
+
+  include TrailTests
+end
+
+class IndexTest < Test::Unit::TestCase
+  attr_reader :trail
+
+  def new_trail
+    trail = Hike::Trail.new(FIXTURE_ROOT)
+    trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
+    trail.extensions.push "builder", "coffee", "str", ".erb"
+    yield trail if block_given?
+    trail.index
+  end
+
+  def setup
+    @trail = new_trail
+  end
+
+  include TrailTests
+
+  def test_changing_trail_path_doesnt_affect_index
+    trail = Hike::Trail.new(FIXTURE_ROOT)
+    trail.paths.push "."
+
+    index = trail.index
+
+    assert_equal [fixture_path(".")], trail.paths
+    assert_equal [fixture_path(".")], index.paths
+
+    trail.paths.push "app/views"
+
+    assert_equal [fixture_path("."), fixture_path("app/views")], trail.paths
+    assert_equal [fixture_path(".")], index.paths
+  end
+
+  def test_changing_trail_extensions_doesnt_affect_index
+    trail = Hike::Trail.new(FIXTURE_ROOT)
+    trail.extensions.push "builder"
+
+    index = trail.index
+
+    assert_equal [".builder"], trail.extensions
+    assert_equal [".builder"], index.extensions
+
+    trail.extensions.push "str"
+
+    assert_equal [".builder", ".str"], trail.extensions
+    assert_equal [".builder"], index.extensions
+  end
+
+  def test_find_does_not_reflect_changes_in_the_file_system
+    assert_nil trail.find("people.html")
+    FileUtils.touch fixture_path("people.html")
+    assert_nil trail.find("people.html")
+  ensure
+    FileUtils.rm fixture_path("people.html")
+    assert !File.exist?(fixture_path("people.html"))
   end
 end
