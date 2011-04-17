@@ -1,4 +1,9 @@
 module Hike
+  # `NormalizedArray` is an internal abstract wrapper class that calls
+  # a callback `normalize_element` anytime an element is added to the
+  # Array.
+  #
+  # `Extensions` and `Paths` are subclasses of `NormalizedArray`.
   class NormalizedArray < Array
     def initialize
       super()
