@@ -1,0 +1,86 @@
+<!DOCTYPE html>  <html> <head>   <title>trail.rb</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="extensions.html">                 extensions.rb               </a>                                           <a class="source" href="index.html">                 index.rb               </a>                                           <a class="source" href="normalized_array.html">                 normalized_array.rb               </a>                                           <a class="source" href="paths.html">                 paths.rb               </a>                                           <a class="source" href="trail.html">                 trail.rb               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               trail.rb             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;pathname&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;hike/extensions&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;hike/index&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;hike/paths&#39;</span>
+
+<span class="k">module</span> <span class="nn">Hike</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p><code>Trail</code> is the public container class for holding paths and extensions.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">class</span> <span class="nc">Trail</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p><code>Trail#paths</code> is a mutable <code>Paths</code> collection.</p>
+
+<pre><code>trail = Hike::Trail.new
+trail.paths.push "~/Projects/hike/lib", "~/Projects/hike/test"
+</code></pre>
+
+<p>The order of the paths is significant. Paths in the beginning of
+the collection will be checked first. In the example above,
+<code>~/Projects/hike/lib/hike.rb</code> would shadow the existent of
+<code>~/Projects/hike/test/hike.rb</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kp">attr_reader</span> <span class="ss">:paths</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p><code>Trail#extensions</code> is a mutable <code>Extensions</code> collection.</p>
+
+<pre><code>trail = Hike::Trail.new
+trail.paths.push "~/Projects/hike/lib"
+trail.extensions.push ".rb"
+</code></pre>
+
+<p>Extensions allow you to find files by just their name omitting
+their extension. Is similar to Ruby's require mechanism that
+allows you to require files with specifiying <code>foo.rb</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kp">attr_reader</span> <span class="ss">:extensions</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>A Trail accepts an optional root path that defaults to your
+current working directory. Any relative paths added to
+<code>Trail#paths</code> will expanded relative to the root.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">root</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+      <span class="vi">@root</span>       <span class="o">=</span> <span class="no">Pathname</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">expand_path</span>
+      <span class="vi">@paths</span>      <span class="o">=</span> <span class="no">Paths</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="vi">@root</span><span class="p">)</span>
+      <span class="vi">@extensions</span> <span class="o">=</span> <span class="no">Extensions</span><span class="o">.</span><span class="n">new</span>
+    <span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p><code>Trail#root</code> returns root path as a <code>String</code>. This attribute is immutable.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">root</span>
+      <span class="vi">@root</span><span class="o">.</span><span class="n">to_s</span>
+    <span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p><code>Trail#find</code> returns a the expand path for a logical path in the
+path collection.</p>
+
+<pre><code>trail = Hike::Trail.new "~/Projects/hike"
+trail.extensions.push ".rb"
+trail.paths.push "lib", "test"
+
+trail.find "hike/trail"
+# =&gt; "~/Projects/hike/lib/hike/trail.rb"
+
+trail.find "test_trail"
+# =&gt; "~/Projects/hike/test/test_trail.rb"
+</code></pre>
+
+<p><code>find</code> accepts multiple fallback logical paths that returns the
+first match.</p>
+
+<pre><code>trail.find "hike", "hike/index"
+</code></pre>
+
+<p>is equivalent to</p>
+
+<pre><code>trail.find("hike") || trail.find("hike/index")
+</code></pre>
+
+<p>Though <code>find</code> always returns the first match, it is possible
+to iterate over all shadowed matches and fallbacks by supplying
+a block.</p>
+
+<pre><code>trail.find("hike", "hike/index") { |path| warn path }
+</code></pre>
+
+<p>This allows you to filter your matches by any condition.</p>
+
+<pre><code>trail.find("application") do |path|
+  return path if mime_type_for(path) == "text/css"
+end
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+      <span class="n">index</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+    <span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p><code>Trail#index</code> returns an <code>Index</code> object that has the same
+interface as <code>Trail</code>. An <code>Index</code> is a cached <code>Trail</code> object that
+does not update when the file system changes. If you are
+confident that you are not making changes the paths you are
+searching, <code>index</code> will avoid excess system calls.</p>
+
+<pre><code>index = trail.index
+index.find "hike/trail"
+index.find "test_trail"
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">index</span>
+      <span class="no">Index</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">extensions</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

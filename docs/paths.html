@@ -1,0 +1,24 @@
+<!DOCTYPE html>  <html> <head>   <title>paths.rb</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="extensions.html">                 extensions.rb               </a>                                           <a class="source" href="index.html">                 index.rb               </a>                                           <a class="source" href="normalized_array.html">                 normalized_array.rb               </a>                                           <a class="source" href="paths.html">                 paths.rb               </a>                                           <a class="source" href="trail.html">                 trail.rb               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               paths.rb             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;pathname&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;hike/normalized_array&#39;</span>
+
+<span class="k">module</span> <span class="nn">Hike</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p><code>Paths</code> is an internal collection for tracking path strings.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">class</span> <span class="nc">Paths</span> <span class="o">&lt;</span> <span class="no">NormalizedArray</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">root</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+      <span class="vi">@root</span> <span class="o">=</span> <span class="no">Pathname</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+      <span class="k">super</span><span class="p">()</span>
+    <span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Relative paths added to this array are expanded relative to <code>@root</code>.</p>
+
+<pre><code>paths = Paths.new("/usr/local")
+paths &lt;&lt; "tmp"
+paths &lt;&lt; "/tmp"
+
+paths
+# =&gt; ["/usr/local/tmp", "/tmp"]
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">normalize_element</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+      <span class="n">path</span> <span class="o">=</span> <span class="no">Pathname</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+      <span class="n">path</span> <span class="o">=</span> <span class="vi">@root</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">relative?</span>
+      <span class="n">path</span><span class="o">.</span><span class="n">expand_path</span><span class="o">.</span><span class="n">to_s</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
