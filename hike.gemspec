@@ -7,6 +7,6 @@ spec = Gem::Specification.new do |s|
   s.homepage     = "http://github.com/sstephenson/hike"
   s.summary      = "Find files in a set of paths"
   s.description  = "A Ruby library for finding files in a set of paths."
-  s.files        = Dir["lib/**/*.rb"]
+  s.files        = Dir["README.md", "LICENSE", "lib/**/*.rb"]
   s.require_path = "lib"
 end
