@@ -28,6 +28,22 @@ module Hike
     # allows you to require files with specifiying `foo.rb`.
     attr_reader :extensions
 
+    # `Trail#aliases` is a mutable hash of strings to an `Extensions` collection
+    #
+    #     trail = Hike::Trail.new
+    #     trail.paths.push "~/Projects/hike/lib"
+    #     trail.aliases['css'] << 'scss'
+    #
+    # Aliases allow you to drop extra extensions while still declaring the
+    # intent of the file. For example, SASS files need the `scss` or `sass`
+    # extension to show that they are SASS files, but they're always `css` files
+    # and the aliases allow you to not need the `css` extension.
+    #
+    # For example, if the above example were executed, then when trying to find
+    # `application.css`, the trails would understand that `application.scss`
+    # is a candidate for being returned.
+    attr_reader :aliases
+
     # A Trail accepts an optional root path that defaults to your
     # current working directory. Any relative paths added to
     # `Trail#paths` will expanded relative to the root.
@@ -35,6 +51,10 @@ module Hike
       @root       = Pathname.new(root).expand_path
       @paths      = Paths.new(@root)
       @extensions = Extensions.new
+      @aliases    = Hash.new{ |h, k|
+        extensions = Extensions.new
+        h[extensions.normalize_element(k)] = extensions
+      }
     end
 
     # `Trail#root` returns root path as a `String`. This attribute is immutable.
@@ -91,7 +111,7 @@ module Hike
     #     index.find "test_trail"
     #
     def index
-      Index.new(root, paths, extensions)
+      Index.new(root, paths, extensions, aliases)
     end
   end
 end

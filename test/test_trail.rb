@@ -107,6 +107,26 @@ module TrailTests
     )
   end
 
+  def test_find_file_with_aliased_extension
+    # Make sure we can find an alias
+    assert_equal(
+      fixture_path("app/views/application.scss"),
+      trail.find("application.css")
+    )
+
+    # Make sure we can still find the file explicitly
+    assert_equal(
+      fixture_path("app/views/application.scss"),
+      trail.find("application.scss")
+    )
+
+    # Make sure extra extensions still work
+    assert_equal(
+      fixture_path("app/views/projects.js.coffee"),
+      trail.find("projects.js")
+    )
+  end
+
   def test_find_file_with_multiple_extensions_respects_extension_order
     assert_equal(
       fixture_path("app/views/application.js.coffee.str"),
@@ -185,6 +205,8 @@ class TrailTest < Test::Unit::TestCase
     trail = Hike::Trail.new(FIXTURE_ROOT)
     trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
     trail.extensions.push "builder", "coffee", "str", ".erb"
+    trail.aliases['css'].push 'scss', 'sass'
+    trail.aliases['js'].push 'coffee'
     yield trail if block_given?
     trail
   end
@@ -219,6 +241,8 @@ class IndexTest < Test::Unit::TestCase
     trail = Hike::Trail.new(FIXTURE_ROOT)
     trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
     trail.extensions.push "builder", "coffee", "str", ".erb"
+    trail.aliases['css'].push 'scss', 'sass'
+    trail.aliases['js'].push 'coffee'
     yield trail if block_given?
     trail.index
   end
