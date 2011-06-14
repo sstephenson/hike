@@ -176,6 +176,25 @@ module TrailTests
   def test_ignores_directories
     assert_nil trail.find("recordings")
   end
+
+  def test_entries
+    expected = [
+      Pathname.new("application.js.coffee.erb"),
+      Pathname.new("application.js.coffee.str"),
+      Pathname.new("index.html.erb"),
+      Pathname.new("layouts"),
+      Pathname.new("projects"),
+      Pathname.new("projects.erb"),
+      Pathname.new("recordings"),
+    ]
+    assert_equal expected, trail.entries(fixture_path("app/views"))
+  end
+
+  def test_stat
+    assert trail.stat(fixture_path("app/views/index.html.erb"))
+    assert trail.stat(fixture_path("app/views"))
+    assert_nil trail.stat(fixture_path("app/views/missing.html"))
+  end
 end
 
 class TrailTest < Test::Unit::TestCase

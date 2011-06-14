@@ -65,6 +65,30 @@ module Hike
       end
     end
 
+    # A cached version of `Dir.entries` that filters out `.` and
+    # `..`. Returns an empty `Array` if the directory does not exist.
+    def entries(path)
+      key = path.to_s
+      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.\.?$/ }
+    rescue Errno::ENOENT
+      @entries[key] = []
+    end
+
+    # A cached version of `File.stat`. Returns nil if the file does
+    # not exist.
+    def stat(path)
+      key = path.to_s
+      if @stats.key?(key)
+        @stats[key]
+      else
+        begin
+          @stats[key] = File.stat(path)
+        rescue Errno::ENOENT
+          @stats[key] = nil
+        end
+      end
+    end
+
     protected
       def extract_options!(arguments)
         arguments.last.is_a?(Hash) ? arguments.pop.dup : {}
@@ -110,28 +134,6 @@ module Hike
             yield pathname.to_s
           end
         end
-      end
-
-      # A cached version of `File.stat`. Returns nil if the file does
-      # not exist.
-      def stat(pathname)
-        if @stats.key?(pathname)
-          @stats[pathname]
-        else
-          begin
-            @stats[pathname] = pathname.stat
-          rescue Errno::ENOENT
-            @stats[pathname] = nil
-          end
-        end
-      end
-
-      # A cached version of `Dir.entries` that filters out `.` and
-      # `..`. Returns an empty `Array` if the directory does not exist.
-      def entries(pathname)
-        @entries[pathname] ||= pathname.entries.reject { |entry| entry.to_s =~ /^\.\.?$/ }
-      rescue Errno::ENOENT
-        @entries[pathname] = []
       end
 
       # Returns true if `dirname` is a subdirectory of any of the `paths`

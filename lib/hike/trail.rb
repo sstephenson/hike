@@ -93,5 +93,19 @@ module Hike
     def index
       Index.new(root, paths, extensions)
     end
+
+    # `Trail#entries` is equivalent to `Dir#entries`. It is not
+    # recommend to use this method for general purposes. It exists for
+    # parity with `Index#entries`.
+    def entries(*args)
+      index.entries(*args)
+    end
+
+    # `Trail#stat` is equivalent to `File#stat`. It is not
+    # recommend to use this method for general purposes. It exists for
+    # parity with `Index#stat`.
+    def stat(*args)
+      index.stat(*args)
+    end
   end
 end
