@@ -1,5 +1,5 @@
 module Hike
-  VERSION = "1.0.0"
+  VERSION = "1.1.0"
 
   autoload :Extensions,      "hike/extensions"
   autoload :Index,           "hike/index"
