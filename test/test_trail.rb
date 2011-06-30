@@ -187,7 +187,7 @@ module TrailTests
       Pathname.new("projects.erb"),
       Pathname.new("recordings"),
     ]
-    assert_equal expected, trail.entries(fixture_path("app/views"))
+    assert_equal expected, trail.entries(fixture_path("app/views")).sort
   end
 
   def test_stat
