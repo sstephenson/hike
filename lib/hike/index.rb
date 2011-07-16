@@ -65,11 +65,12 @@ module Hike
       end
     end
 
-    # A cached version of `Dir.entries` that filters out `.` and
-    # `..`. Returns an empty `Array` if the directory does not exist.
+    # A cached version of `Dir.entries` that filters out `.` files and
+    # `~` swap files. Returns an empty `Array` if the directory does
+    # not exist.
     def entries(path)
       key = path.to_s
-      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.\.?$/ }
+      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }
     rescue Errno::ENOENT
       @entries[key] = []
     end
