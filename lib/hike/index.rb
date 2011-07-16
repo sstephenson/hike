@@ -11,16 +11,20 @@ module Hike
     # `Index#extensions` is an immutable `Extensions` collection.
     attr_reader :extensions
 
+    # `Index#aliases` is an immutable hash.
+    attr_reader :aliases
+
     # `Index.new` is an internal method. Instead of constructing it
     # directly, create a `Trail` and call `Trail#index`.
-    def initialize(root, paths, extensions)
+    def initialize(root, paths, extensions, aliases)
       @root = root
 
       # Freeze is used here so an error is throw if a mutator method
-      # is called on the array. Mutating `@paths` or `@extensions`
+      # is called on the array. Mutating `@paths`, `@extensions`, or `@aliases`
       # would have unpredictable results.
       @paths      = paths.dup.freeze
       @extensions = extensions.dup.freeze
+      @aliases    = aliases.dup.freeze
       @pathnames  = paths.map { |path| Pathname.new(path) }
 
       @stats    = {}
@@ -142,13 +146,30 @@ module Hike
         paths.any? { |path| dirname.to_s[0, path.length] == path }
       end
 
-      # Returns a `Regexp` that matches the allowed extensions.
+      # Returns a `Regexp` that matches the allowed extensions/aliases.
       #
-      #     pattern_for("index.html") #=> /^index.html(.builder|.erb)+$/
+      #     pattern_for("index.html") #=> /^index.html(.builder|.erb)*$/
+      #     pattern_for("app.css")    #=> /^app.(scss|css)(.builder|.erb)*$/
       def pattern_for(basename)
         @patterns[basename] ||= begin
+          # If we have a set of aliases registered, then set the regexp
+          # accordingly to require one of the aliases or original extensions
+          # to be listed.
+          if @aliases.key?(basename.extname)
+            filename = basename.to_s.gsub(basename.extname, '')
+
+            aliases_pattern = @aliases[basename.extname].map{ |a|
+              Regexp.escape(a)
+            }.join("|")
+
+            base_regex = Regexp.escape(filename) +
+              "(?:#{aliases_pattern}|#{Regexp.escape(basename.extname)})"
+          else
+            base_regex = Regexp.escape(basename.to_s)
+          end
+
           extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
-          /^#{Regexp.escape(basename.to_s)}(?:#{extension_pattern}|)+$/
+          /^#{base_regex}(?:#{extension_pattern})*$/
         end
       end
 
