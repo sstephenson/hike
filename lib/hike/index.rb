@@ -11,16 +11,23 @@ module Hike
     # `Index#extensions` is an immutable `Extensions` collection.
     attr_reader :extensions
 
+    # `Index#aliases` is an immutable `Hash` mapping an extension to
+    # an `Array` of aliases.
+    attr_reader :aliases
+
     # `Index.new` is an internal method. Instead of constructing it
     # directly, create a `Trail` and call `Trail#index`.
-    def initialize(root, paths, extensions)
+    def initialize(root, paths, extensions, aliases)
       @root = root
 
       # Freeze is used here so an error is throw if a mutator method
-      # is called on the array. Mutating `@paths` or `@extensions`
-      # would have unpredictable results.
+      # is called on the array. Mutating `@paths`, `@extensions`, or
+      # `@aliases` would have unpredictable results.
       @paths      = paths.dup.freeze
       @extensions = extensions.dup.freeze
+      @aliases    = aliases.inject({}) { |h, (k, a)|
+                      h[k] = a.dup.freeze; h
+                   }.freeze
       @pathnames  = paths.map { |path| Pathname.new(path) }
 
       @stats    = {}
@@ -142,23 +149,47 @@ module Hike
         paths.any? { |path| dirname.to_s[0, path.length] == path }
       end
 
+      # Cache results of `build_pattern_for`
+      def pattern_for(basename)
+        @patterns[basename] ||= build_pattern_for(basename)
+      end
+
       # Returns a `Regexp` that matches the allowed extensions.
       #
-      #     pattern_for("index.html") #=> /^index.html(.builder|.erb)+$/
-      def pattern_for(basename)
-        @patterns[basename] ||= begin
-          extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
-          /^#{Regexp.escape(basename.to_s)}(?:#{extension_pattern}|)+$/
+      #     pattern_for("index.html") #=> /^index(.html|.htm)(.builder|.erb)*$/
+      def build_pattern_for(basename)
+        extname = basename.extname
+
+        if @aliases.key?(extname)
+          basename = basename.basename(extname)
+          aliases  = [extname] + @aliases[extname]
+          aliases_pattern = aliases.map { |e| Regexp.escape(e) }.join("|")
+          basename_re = Regexp.escape(basename.to_s) + "(?:#{aliases_pattern})"
+        else
+          basename_re = Regexp.escape(basename.to_s)
         end
+
+        extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
+        /^#{basename_re}(?:#{extension_pattern})*$/
       end
 
       # Sorts candidate matches by their extension
       # priority. Extensions in the front of the `extensions` carry
       # more weight.
       def sort_matches(matches, basename)
+        aliases = @aliases[basename.extname]
+
         matches.sort_by do |match|
-          extnames = match.to_s[basename.to_s.length..-1].scan(/.[^.]+/)
-          extnames.inject(0) { |sum, ext| sum + extensions.index(ext) + 1 }
+          extnames = match.sub(basename.to_s, '').to_s.scan(/\.[^.]+/)
+          extnames.inject(0) do |sum, ext|
+            if i = extensions.index(ext)
+              sum + i + 1
+            elsif i = aliases.index(ext)
+              sum + i + 11
+            else
+              sum
+            end
+          end
         end
       end
   end

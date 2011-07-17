@@ -121,6 +121,39 @@ module TrailTests
     )
   end
 
+  def test_find_file_by_aliased_extension
+    assert_equal(
+      fixture_path("app/views/people.coffee"),
+      trail.find("people.coffee")
+    )
+
+    assert_equal(
+      fixture_path("app/views/people.coffee"),
+      trail.find("people.js")
+    )
+
+    assert_equal(
+      fixture_path("app/views/people.htm"),
+      trail.find("people.htm")
+    )
+
+    assert_equal(
+      fixture_path("app/views/people.htm"),
+      trail.find("people.html")
+    )
+  end
+
+  def test_find_file_with_aliases_prefers_primary_extension
+    assert_equal(
+      fixture_path("app/views/index.html.erb"),
+      trail.find("index.html")
+    )
+    assert_equal(
+      fixture_path("app/views/index.php"),
+      trail.find("index.php")
+    )
+  end
+
   def test_find_with_base_path_option_and_relative_logical_path
     assert_equal(
       fixture_path("app/views/projects/index.html.erb"),
@@ -182,7 +215,10 @@ module TrailTests
       Pathname.new("application.js.coffee.erb"),
       Pathname.new("application.js.coffee.str"),
       Pathname.new("index.html.erb"),
+      Pathname.new("index.php"),
       Pathname.new("layouts"),
+      Pathname.new("people.coffee"),
+      Pathname.new("people.htm"),
       Pathname.new("projects"),
       Pathname.new("projects.erb"),
       Pathname.new("recordings"),
@@ -204,6 +240,8 @@ class TrailTest < Test::Unit::TestCase
     trail = Hike::Trail.new(FIXTURE_ROOT)
     trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
     trail.extensions.push "builder", "coffee", "str", ".erb"
+    trail.aliases["html"].push "htm", "xhtml", "php"
+    trail.aliases["js"].push "coffee"
     yield trail if block_given?
     trail
   end
@@ -220,12 +258,12 @@ class TrailTest < Test::Unit::TestCase
   end
 
   def test_find_reflects_changes_in_the_file_system
-    assert_nil trail.find("people.html")
-    FileUtils.touch fixture_path("people.html")
-    assert_equal fixture_path("people.html"), trail.find("people.html")
+    assert_nil trail.find("dashboard.html")
+    FileUtils.touch fixture_path("dashboard.html")
+    assert_equal fixture_path("dashboard.html"), trail.find("dashboard.html")
   ensure
-    FileUtils.rm fixture_path("people.html")
-    assert !File.exist?(fixture_path("people.html"))
+    FileUtils.rm fixture_path("dashboard.html")
+    assert !File.exist?(fixture_path("dashboard.html"))
   end
 
   include TrailTests
@@ -238,6 +276,8 @@ class IndexTest < Test::Unit::TestCase
     trail = Hike::Trail.new(FIXTURE_ROOT)
     trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
     trail.extensions.push "builder", "coffee", "str", ".erb"
+    trail.aliases["html"].push "htm", "xhtml", "php"
+    trail.aliases["js"].push "coffee"
     yield trail if block_given?
     trail.index
   end
@@ -279,11 +319,11 @@ class IndexTest < Test::Unit::TestCase
   end
 
   def test_find_does_not_reflect_changes_in_the_file_system
-    assert_nil trail.find("people.html")
-    FileUtils.touch fixture_path("people.html")
-    assert_nil trail.find("people.html")
+    assert_nil trail.find("dashboard.html")
+    FileUtils.touch fixture_path("dashboard.html")
+    assert_nil trail.find("dashboard.html")
   ensure
-    FileUtils.rm fixture_path("people.html")
-    assert !File.exist?(fixture_path("people.html"))
+    FileUtils.rm fixture_path("dashboard.html")
+    assert !File.exist?(fixture_path("dashboard.html"))
   end
 end
