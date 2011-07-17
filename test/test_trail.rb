@@ -238,10 +238,17 @@ class TrailTest < Test::Unit::TestCase
 
   def new_trail
     trail = Hike::Trail.new(FIXTURE_ROOT)
-    trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
-    trail.extensions.push "builder", "coffee", "str", ".erb"
-    trail.aliases["html"].push "htm", "xhtml", "php"
-    trail.aliases["js"].push "coffee"
+    trail.add_path "app/views"
+    trail.add_path "vendor/plugins/signal_id/app/views"
+    trail.add_path "."
+    trail.add_extension "builder"
+    trail.add_extension "coffee"
+    trail.add_extension "str"
+    trail.add_extension ".erb"
+    trail.add_alias "html", "htm"
+    trail.add_alias "html", "xhtml"
+    trail.add_alias "html", "php"
+    trail.add_alias "js", "coffee"
     yield trail if block_given?
     trail
   end
@@ -274,10 +281,17 @@ class IndexTest < Test::Unit::TestCase
 
   def new_trail
     trail = Hike::Trail.new(FIXTURE_ROOT)
-    trail.paths.push "app/views", "vendor/plugins/signal_id/app/views", "."
-    trail.extensions.push "builder", "coffee", "str", ".erb"
-    trail.aliases["html"].push "htm", "xhtml", "php"
-    trail.aliases["js"].push "coffee"
+    trail.add_path "app/views"
+    trail.add_path "vendor/plugins/signal_id/app/views"
+    trail.add_path "."
+    trail.add_extension "builder"
+    trail.add_extension "coffee"
+    trail.add_extension "str"
+    trail.add_extension ".erb"
+    trail.add_alias "html", "htm"
+    trail.add_alias "html", "xhtml"
+    trail.add_alias "html", "php"
+    trail.add_alias "js", "coffee"
     yield trail if block_given?
     trail.index
   end

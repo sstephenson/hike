@@ -49,15 +49,49 @@ module Hike
       @root       = Pathname.new(root).expand_path
       @paths      = Paths.new(@root)
       @extensions = Extensions.new
-      @aliases    = Hash.new { |h, k|
-        extensions = Extensions.new
-        h[extensions.normalize_element(k)] = extensions
-      }
+      @aliases    = Hash.new { |h, k| h[k] = Extensions.new }
     end
 
     # `Trail#root` returns root path as a `String`. This attribute is immutable.
     def root
       @root.to_s
+    end
+
+    # Add `path` to `Paths` collection
+    def add_path(path)
+      paths.push(path)
+    end
+
+    # Remove `path` from `Paths` collection
+    def remove_path(path)
+      paths.delete(path)
+    end
+
+    # Add `extension` from `Extensions` collection
+    def add_extension(extension)
+      extensions.push(extension)
+    end
+
+    # Remove `extension` from `Extensions` collection
+    def remove_extension(extension)
+      extensions.delete(extension)
+    end
+
+    # Alias `from` to `to` extension
+    def add_alias(from, to)
+      from, to = normalize_extension(from), normalize_extension(to)
+      aliases[from].push(to)
+    end
+
+    # Remove `to` alias from `from` or remove all `from` aliases.
+    def remove_alias(from, to = nil)
+      from = normalize_extension(from)
+      if to
+        to = normalize_extension(to)
+        aliases[from].delete(to)
+      else
+        aliases.delete(from)
+      end
     end
 
     # `Trail#find` returns a the expand path for a logical path in the
@@ -125,5 +159,14 @@ module Hike
     def stat(*args)
       index.stat(*args)
     end
+
+    private
+      def normalize_extension(extension)
+        if extension[/^\./]
+          extension
+        else
+          ".#{extension}"
+        end
+      end
   end
 end
