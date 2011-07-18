@@ -58,13 +58,13 @@ module Hike
     end
 
     # Prepend `path` to `Paths` collection
-    def prepend_path(path)
-      paths.unshift(path)
+    def prepend_path(*path)
+      paths.unshift(*path)
     end
 
     # Append `path` to `Paths` collection
-    def append_path(path)
-      paths.push(path)
+    def append_path(*path)
+      paths.push(*path)
     end
 
     # Remove `path` from `Paths` collection
@@ -73,13 +73,13 @@ module Hike
     end
 
     # Prepend `extension` to `Extensions` collection
-    def prepend_extension(extension)
-      extensions.unshift(extension)
+    def prepend_extension(*extension)
+      extensions.unshift(*extension)
     end
 
     # Append `extension` to `Extensions` collection
-    def append_extension(extension)
-      extensions.push(extension)
+    def append_extension(*extension)
+      extensions.push(*extension)
     end
 
     # Remove `extension` from `Extensions` collection
