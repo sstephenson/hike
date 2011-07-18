@@ -58,33 +58,37 @@ module Hike
     end
 
     # Prepend `path` to `Paths` collection
-    def prepend_path(path)
-      paths.unshift(path)
+    def prepend_paths(*paths)
+      self.paths.unshift(*paths)
     end
+    alias_method :prepend_path, :prepend_paths
 
     # Append `path` to `Paths` collection
-    def append_path(path)
-      paths.push(path)
+    def append_paths(*paths)
+      self.paths.push(*paths)
     end
+    alias_method :append_path, :append_paths
 
     # Remove `path` from `Paths` collection
     def remove_path(path)
-      paths.delete(path)
+      self.paths.delete(path)
     end
 
     # Prepend `extension` to `Extensions` collection
-    def prepend_extension(extension)
-      extensions.unshift(extension)
+    def prepend_extensions(*extensions)
+      self.extensions.unshift(*extensions)
     end
+    alias_method :prepend_extension, :prepend_extensions
 
     # Append `extension` to `Extensions` collection
-    def append_extension(extension)
-      extensions.push(extension)
+    def append_extensions(*extensions)
+      self.extensions.push(*extensions)
     end
+    alias_method :append_extension, :append_extensions
 
     # Remove `extension` from `Extensions` collection
     def remove_extension(extension)
-      extensions.delete(extension)
+      self.extensions.delete(extension)
     end
 
     # Alias `new_extension` to `old_extension`
