@@ -47,6 +47,6 @@ Explore your shell path:
 
 # License
 
-Copyright (c) 2010 Sam Stephenson.
+Copyright (c) 2011 Sam Stephenson.
 
 Released under the MIT license. See `LICENSE` for details.
