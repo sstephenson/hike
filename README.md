@@ -9,8 +9,8 @@ implement search paths, load paths, and the like.
 Find Ruby files in this project:
 
     trail = Hike::Trail.new "/Users/sam/Projects/hike"
-    trail.extensions.push ".rb"
-    trail.paths.push "lib", "test"
+    trail.append_extension ".rb"
+    trail.append_path "lib", "test"
 
     trail.find "hike/trail"
     # => "/Users/sam/Projects/hike/lib/hike/trail.rb"
@@ -21,8 +21,8 @@ Find Ruby files in this project:
 Explore your Ruby load path:
 
     trail = Hike::Trail.new "/"
-    trail.extensions.push ".rb", ".bundle"
-    trail.paths.replace $:
+    trail.append_extension ".rb", ".bundle"
+    trail.append_path *$:
 
     trail.find "net/http"
     # => "/Users/sam/.rvm/rubies/ree-1.8.7-2010.02/lib/ruby/1.8/net/http.rb"
@@ -33,7 +33,7 @@ Explore your Ruby load path:
 Explore your shell path:
 
     trail = Hike::Trail.new "/"
-    trail.paths.replace ENV["PATH"].split(":")
+    trail.append_path *ENV["PATH"].split(":")
 
     trail.find "ls"
     # => "/bin/ls"
