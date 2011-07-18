@@ -159,10 +159,11 @@ module Hike
       #     pattern_for("index.html") #=> /^index(.html|.htm)(.builder|.erb)*$/
       def build_pattern_for(basename)
         extname = basename.extname
+        aliases = find_aliases_for(extname)
 
-        if @aliases.key?(extname)
+        if aliases.any?
           basename = basename.basename(extname)
-          aliases  = [extname] + @aliases[extname]
+          aliases  = [extname] + aliases
           aliases_pattern = aliases.map { |e| Regexp.escape(e) }.join("|")
           basename_re = Regexp.escape(basename.to_s) + "(?:#{aliases_pattern})"
         else
@@ -177,7 +178,7 @@ module Hike
       # priority. Extensions in the front of the `extensions` carry
       # more weight.
       def sort_matches(matches, basename)
-        aliases = @aliases[basename.extname]
+        aliases = find_aliases_for(basename.extname)
 
         matches.sort_by do |match|
           extnames = match.sub(basename.to_s, '').to_s.scan(/\.[^.]+/)
@@ -190,6 +191,13 @@ module Hike
               sum
             end
           end
+        end
+      end
+
+      def find_aliases_for(extension)
+        @aliases.inject([]) do |aliases, (key, value)|
+          aliases.push(key) if value == extension
+          aliases
         end
       end
   end

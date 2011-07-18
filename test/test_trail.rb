@@ -245,10 +245,10 @@ class TrailTest < Test::Unit::TestCase
     trail.add_extension "coffee"
     trail.add_extension "str"
     trail.add_extension ".erb"
-    trail.add_alias "html", "htm"
-    trail.add_alias "html", "xhtml"
-    trail.add_alias "html", "php"
-    trail.add_alias "js", "coffee"
+    trail.alias_extension "htm", "html"
+    trail.alias_extension "xhtml", "html"
+    trail.alias_extension "php", "html"
+    trail.alias_extension "coffee", "js"
     yield trail if block_given?
     trail
   end
@@ -288,10 +288,10 @@ class IndexTest < Test::Unit::TestCase
     trail.add_extension "coffee"
     trail.add_extension "str"
     trail.add_extension ".erb"
-    trail.add_alias "html", "htm"
-    trail.add_alias "html", "xhtml"
-    trail.add_alias "html", "php"
-    trail.add_alias "js", "coffee"
+    trail.alias_extension "htm", "html"
+    trail.alias_extension "xhtml", "html"
+    trail.alias_extension "php", "html"
+    trail.alias_extension "coffee", "js"
     yield trail if block_given?
     trail.index
   end

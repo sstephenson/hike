@@ -33,9 +33,9 @@ module Hike
     #
     #   trail = Hike::Trail.new
     #   trail.paths.push "~/Projects/hike/site"
-    #   trail.aliases['html'] << 'htm'
-    #   trail.aliases['html'] << 'xhtml'
-    #   trail.aliases['html'] << 'php'
+    #   trail.aliases['.htm']   = 'html'
+    #   trail.aliases['.xhtml'] = 'html'
+    #   trail.aliases['.php']   = 'html'
     #
     # Aliases provide a fallback when the primary extension is not
     # matched. In the example above, a lookup for "foo.html" will
@@ -77,21 +77,14 @@ module Hike
       extensions.delete(extension)
     end
 
-    # Alias `from` to `to` extension
-    def add_alias(from, to)
-      from, to = normalize_extension(from), normalize_extension(to)
-      aliases[from].push(to)
+    # Alias `new_extension` to `old_extension`
+    def alias_extension(new_extension, old_extension)
+      aliases[normalize_extension(new_extension)] = normalize_extension(old_extension)
     end
 
-    # Remove `to` alias from `from` or remove all `from` aliases.
-    def remove_alias(from, to = nil)
-      from = normalize_extension(from)
-      if to
-        to = normalize_extension(to)
-        aliases[from].delete(to)
-      else
-        aliases.delete(from)
-      end
+    # Remove the alias for `extension`
+    def unalias_extension(extension)
+      aliases.delete(normalize_extension(extension))
     end
 
     # `Trail#find` returns a the expand path for a logical path in the
