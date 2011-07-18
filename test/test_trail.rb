@@ -238,13 +238,13 @@ class TrailTest < Test::Unit::TestCase
 
   def new_trail
     trail = Hike::Trail.new(FIXTURE_ROOT)
-    trail.add_path "app/views"
-    trail.add_path "vendor/plugins/signal_id/app/views"
-    trail.add_path "."
-    trail.add_extension "builder"
-    trail.add_extension "coffee"
-    trail.add_extension "str"
-    trail.add_extension ".erb"
+    trail.append_path "app/views"
+    trail.append_path "vendor/plugins/signal_id/app/views"
+    trail.append_path "."
+    trail.append_extension "builder"
+    trail.append_extension "coffee"
+    trail.append_extension "str"
+    trail.append_extension ".erb"
     trail.alias_extension "htm", "html"
     trail.alias_extension "xhtml", "html"
     trail.alias_extension "php", "html"
@@ -281,13 +281,13 @@ class IndexTest < Test::Unit::TestCase
 
   def new_trail
     trail = Hike::Trail.new(FIXTURE_ROOT)
-    trail.add_path "app/views"
-    trail.add_path "vendor/plugins/signal_id/app/views"
-    trail.add_path "."
-    trail.add_extension "builder"
-    trail.add_extension "coffee"
-    trail.add_extension "str"
-    trail.add_extension ".erb"
+    trail.append_path "app/views"
+    trail.append_path "vendor/plugins/signal_id/app/views"
+    trail.append_path "."
+    trail.append_extension "builder"
+    trail.append_extension "coffee"
+    trail.append_extension "str"
+    trail.append_extension ".erb"
     trail.alias_extension "htm", "html"
     trail.alias_extension "xhtml", "html"
     trail.alias_extension "php", "html"

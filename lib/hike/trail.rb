@@ -57,8 +57,13 @@ module Hike
       @root.to_s
     end
 
-    # Add `path` to `Paths` collection
-    def add_path(path)
+    # Prepend `path` to `Paths` collection
+    def prepend_path(path)
+      paths.unshift(path)
+    end
+
+    # Append `path` to `Paths` collection
+    def append_path(path)
       paths.push(path)
     end
 
@@ -67,8 +72,13 @@ module Hike
       paths.delete(path)
     end
 
-    # Add `extension` from `Extensions` collection
-    def add_extension(extension)
+    # Prepend `extension` to `Extensions` collection
+    def prepend_extension(extension)
+      extensions.unshift(extension)
+    end
+
+    # Append `extension` to `Extensions` collection
+    def append_extension(extension)
       extensions.push(extension)
     end
 
