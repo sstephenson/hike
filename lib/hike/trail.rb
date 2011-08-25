@@ -166,6 +166,10 @@ module Hike
     def stat(*args)
       index.stat(*args)
     end
+    
+    def find_all
+      index.find_all
+    end
 
     private
       def normalize_extension(extension)
