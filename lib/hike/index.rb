@@ -1,6 +1,9 @@
 require 'pathname'
 
 module Hike
+  # This Regexp determines which files to ignore (`.` and `~` files)
+  IGNORE_PATTERN = /^\.|~$|^\#.*\#$/
+  
   # `Index` is an internal cached variant of `Trail`. It assumes the
   # file system does not change between `find` calls. All `stat` and
   # `entries` calls are cached for the lifetime of the `Index` object.
@@ -71,13 +74,28 @@ module Hike
         end
       end
     end
+    
+    # Loops through all the paths and resolves all possible logical paths.
+    def find_all
+      @all_possibilities ||= @pathnames.map {|base_path|
+        Dir.glob("#{base_path}/**/*").map {|entry|
+          next if File.directory?(entry) || entry =~ IGNORE_PATTERN
+          regexp = %r|#{Regexp.quote base_path.to_s}/|
+          entry.gsub(regexp, "").rpartition(".").first
+        }
+      }.flatten.compact.uniq.inject({}) {|hsh, entry|
+        find(entry) {|path| hsh[entry] = path }; hsh
+      }
+    end
 
     # A cached version of `Dir.entries` that filters out `.` files and
     # `~` swap files. Returns an empty `Array` if the directory does
     # not exist.
     def entries(path)
       key = path.to_s
-      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
+      @entries[key] ||= Pathname.new(path).entries.reject {|entry|
+        entry.to_s =~ IGNORE_PATTERN
+      }.sort
     rescue Errno::ENOENT
       @entries[key] = []
     end

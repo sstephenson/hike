@@ -231,6 +231,9 @@ module TrailTests
     assert trail.stat(fixture_path("app/views"))
     assert_nil trail.stat(fixture_path("app/views/missing.html"))
   end
+  
+  def test_find_all
+  end
 end
 
 class TrailTest < Test::Unit::TestCase
