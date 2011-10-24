@@ -1,4 +1,5 @@
 require 'pathname'
+require 'yaml'
 
 module Hike
   # `Index` is an internal cached variant of `Trail`. It assumes the
@@ -17,7 +18,7 @@ module Hike
 
     # `Index.new` is an internal method. Instead of constructing it
     # directly, create a `Trail` and call `Trail#index`.
-    def initialize(root, paths, extensions, aliases)
+    def initialize(root, paths, extensions, aliases, ignores = nil)
       @root = root
 
       # Freeze is used here so an error is throw if a mutator method
@@ -33,6 +34,7 @@ module Hike
       @stats    = {}
       @entries  = {}
       @patterns = {}
+      @ignore_pattern = ignores
     end
 
     # `Index#root` returns root path as a `String`. This attribute is immutable.
@@ -77,7 +79,9 @@ module Hike
     # not exist.
     def entries(path)
       key = path.to_s
-      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
+      @entries[key] ||= Pathname.new(path).entries.reject do |entry|
+        entry.to_s =~ (@ignores ||= build_ignores_pattern)
+      end.sort
     rescue Errno::ENOENT
       @entries[key] = []
     end
@@ -199,6 +203,12 @@ module Hike
           aliases.push(key) if value == extension
           aliases
         end
+      end
+
+      # merges user specified ignore pattern with defaults
+      def build_ignores_pattern
+        default = /^\.|~$|^\#.*\#$/
+        @ignore_pattern ?  Regexp.new("#{default}|#{@ignore_pattern}") : default
       end
   end
 end

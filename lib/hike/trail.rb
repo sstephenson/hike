@@ -50,6 +50,13 @@ module Hike
       @paths      = Paths.new(@root)
       @extensions = Extensions.new
       @aliases    = Hash.new { |h, k| h[k] = Extensions.new }
+
+      @ignores_pattern = begin
+        yaml = YAML.load_file(File.expand_path('~/.hikerc'))
+        yaml['ignore_regexp'] if yaml.key?('ignore_regexp')
+      rescue Errno::ENOENT
+        nil
+      end
     end
 
     # `Trail#root` returns root path as a `String`. This attribute is immutable.
@@ -150,7 +157,7 @@ module Hike
     #     index.find "test_trail"
     #
     def index
-      Index.new(root, paths, extensions, aliases)
+      Index.new(root, paths, extensions, aliases, @ignores_pattern)
     end
 
     # `Trail#entries` is equivalent to `Dir#entries`. It is not
