@@ -1,7 +1,39 @@
 require "hike_test"
 require "fileutils"
 
+module PreserveHomeHelper
+  def change_home(new_home)
+    old_home, ENV['HOME'] = ENV['HOME'], new_home
+    return old_home
+  end
+
+  def restore_home(old_home)
+    ENV['HOME'] = old_home
+  end
+
+  def setup_env
+    @oldhome = change_home(fixture_path('.'))
+  end
+
+  def unsetup_env
+    restore_home(@oldhome)
+  end
+
+  def with_changed_home(new_home)
+    res = nil
+    begin
+      old_home = change_home(new_home)
+      res = yield
+    ensure
+      restore_home(old_home)
+    end
+    res
+  end
+end
+
 module TrailTests
+  include PreserveHomeHelper
+
   def fixture_path(path)
     File.expand_path(File.join(FIXTURE_ROOT, path))
   end
@@ -226,6 +258,22 @@ module TrailTests
     assert_equal expected, trail.entries(fixture_path("app/views")).sort
   end
 
+  def test_merges_ignore_pattern_from_hikerc_file_with_default
+    expected = [ Pathname.new("file.txt") ]
+    trail = with_changed_home(fixture_path('home')) { new_trail }
+    assert_equal expected, trail.entries(fixture_path("home")).sort
+  end
+
+  def test_uses_default_ignore_pattern_when_not_specified_in_hikerc
+    expected = [
+      Pathname.new("file.orig"),
+      Pathname.new("file.txt"),
+    ]
+
+    trail = with_changed_home(fixture_path('home_empty_rc')) { new_trail }
+    assert_equal expected, trail.entries(fixture_path("home")).sort
+  end
+
   def test_stat
     assert trail.stat(fixture_path("app/views/index.html.erb"))
     assert trail.stat(fixture_path("app/views"))
@@ -249,7 +297,12 @@ class TrailTest < Test::Unit::TestCase
   end
 
   def setup
+    setup_env
     @trail = new_trail
+  end
+
+  def teardown
+    unsetup_env
   end
 
   def test_root_defaults_to_cwd
@@ -287,7 +340,12 @@ class IndexTest < Test::Unit::TestCase
   end
 
   def setup
+    setup_env
     @trail = new_trail
+  end
+
+  def teardown
+    unsetup_env
   end
 
   include TrailTests
