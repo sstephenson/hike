@@ -77,9 +77,11 @@ module Hike
     # not exist.
     def entries(path)
       key = path.to_s
-      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
-    rescue Errno::ENOENT
-      @entries[key] = []
+      if File.directory?(key)
+        @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
+      else
+        @entries[key] = []
+      end
     end
 
     # A cached version of `File.stat`. Returns nil if the file does
