@@ -163,8 +163,10 @@ module Hike
     # `Trail#stat` is equivalent to `File#stat`. It is not
     # recommend to use this method for general purposes. It exists for
     # parity with `Index#stat`.
-    def stat(*args)
-      index.stat(*args)
+    def stat(path)
+      File.stat(path.to_s)
+    rescue Errno::ENOENT
+      nil
     end
 
     private
