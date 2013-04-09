@@ -156,8 +156,10 @@ module Hike
     # `Trail#entries` is equivalent to `Dir#entries`. It is not
     # recommend to use this method for general purposes. It exists for
     # parity with `Index#entries`.
-    def entries(*args)
-      index.entries(*args)
+    def entries(path)
+      Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
+    rescue Errno::ENOENT
+      []
     end
 
     # `Trail#stat` is equivalent to `File#stat`. It is not
