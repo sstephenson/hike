@@ -9,5 +9,6 @@ spec = Gem::Specification.new do |s|
   s.description  = "A Ruby library for finding files in a set of paths."
   s.files        = Dir["README.md", "LICENSE", "lib/**/*.rb"]
   s.require_path = "lib"
+  s.license      = "MIT"
   s.add_development_dependency "rake"
 end
