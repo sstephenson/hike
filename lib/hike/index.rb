@@ -77,7 +77,7 @@ module Hike
     # not exist.
     def entries(path)
       key = path.to_s
-      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
+      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|(?:~|\.bak)$|^\#.*\#$/ }.sort
     rescue Errno::ENOENT
       @entries[key] = []
     end
