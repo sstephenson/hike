@@ -76,10 +76,14 @@ module Hike
     # `~` swap files. Returns an empty `Array` if the directory does
     # not exist.
     def entries(path)
-      key = path.to_s
-      @entries[key] ||= Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
-    rescue Errno::ENOENT
-      @entries[key] = []
+      @entries[path.to_s] ||= begin
+        pathname = Pathname.new(path)
+        if pathname.directory?
+          pathname.entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
+        else
+          []
+        end
+      end
     end
 
     # A cached version of `File.stat`. Returns nil if the file does
@@ -88,12 +92,10 @@ module Hike
       key = path.to_s
       if @stats.key?(key)
         @stats[key]
+      elsif File.exist?(path)
+        @stats[key] = File.stat(path)
       else
-        begin
-          @stats[key] = File.stat(path)
-        rescue Errno::ENOENT
-          @stats[key] = nil
-        end
+        @stats[key] = nil
       end
     end
 
