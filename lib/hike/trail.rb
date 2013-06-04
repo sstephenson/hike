@@ -157,18 +157,23 @@ module Hike
     # recommend to use this method for general purposes. It exists for
     # parity with `Index#entries`.
     def entries(path)
-      Pathname.new(path).entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
-    rescue Errno::ENOENT
-      []
+      pathname = Pathname.new(path)
+      if pathname.directory?
+        pathname.entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
+      else
+        []
+      end
     end
 
     # `Trail#stat` is equivalent to `File#stat`. It is not
     # recommend to use this method for general purposes. It exists for
     # parity with `Index#stat`.
     def stat(path)
-      File.stat(path.to_s)
-    rescue Errno::ENOENT
-      nil
+      if File.exist?(path)
+        File.stat(path.to_s)
+      else
+        nil
+      end
     end
 
     private
