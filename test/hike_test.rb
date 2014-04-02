@@ -1,4 +1,4 @@
-require "test/unit"
+require "minitest/autorun"
 require "hike"
 
 FIXTURE_ROOT = File.expand_path(File.join(File.dirname(__FILE__), "fixtures"))
