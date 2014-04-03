@@ -233,7 +233,7 @@ module TrailTests
   end
 end
 
-class TrailTest < Test::Unit::TestCase
+class TrailTest < Hike::Test
   attr_reader :trail
 
   def new_trail
@@ -271,7 +271,7 @@ class TrailTest < Test::Unit::TestCase
   include TrailTests
 end
 
-class IndexTest < Test::Unit::TestCase
+class IndexTest < Hike::Test
   attr_reader :trail
 
   def new_trail

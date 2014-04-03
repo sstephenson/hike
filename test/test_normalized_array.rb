@@ -6,7 +6,7 @@ class UppercaseArray < Hike::NormalizedArray
   end
 end
 
-class NormalizedArrayTest < Test::Unit::TestCase
+class NormalizedArrayTest < Hike::Test
   def setup
     @array = UppercaseArray.new
   end

@@ -10,5 +10,6 @@ spec = Gem::Specification.new do |s|
   s.files        = Dir["README.md", "LICENSE", "lib/**/*.rb"]
   s.require_path = "lib"
   s.license      = "MIT"
+  s.required_ruby_version = ">= 1.9.3"
   s.add_development_dependency "rake"
 end
