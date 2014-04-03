@@ -52,27 +52,31 @@ module Hike
     # time cache and delegates here.
     #
     # See `Trail#find` for usage.
-    def find(*logical_paths, &block)
-      if block_given?
-        options = extract_options!(logical_paths)
-        base_path = Pathname.new(options[:base_path] || @root)
+    def find(*logical_paths)
+      find_all(*logical_paths).first
+    end
 
-        logical_paths.each do |logical_path|
-          logical_path = Pathname.new(logical_path.sub(/^\//, ''))
+    # The real implementation of `find_all`. `Trail#find_all` generates a one
+    # time index and delegates here.
+    #
+    # See `Trail#find_all` for usage.
+    def find_all(*logical_paths, &block)
+      return to_enum(__method__, *logical_paths) unless block_given?
 
-          if relative?(logical_path)
-            find_in_base_path(logical_path, base_path, &block)
-          else
-            find_in_paths(logical_path, &block)
-          end
-        end
+      options = extract_options!(logical_paths)
+      base_path = Pathname.new(options[:base_path] || @root)
 
-        nil
-      else
-        find(*logical_paths) do |path|
-          return path
+      logical_paths.each do |logical_path|
+        logical_path = Pathname.new(logical_path.sub(/^\//, ''))
+
+        if relative?(logical_path)
+          find_in_base_path(logical_path, base_path, &block)
+        else
+          find_in_paths(logical_path, &block)
         end
       end
+
+      nil
     end
 
     # A cached version of `Dir.entries` that filters out `.` files and

@@ -123,20 +123,24 @@ module Hike
     #
     #     trail.find("hike") || trail.find("hike/index")
     #
-    # Though `find` always returns the first match, it is possible
-    # to iterate over all shadowed matches and fallbacks by supplying
-    # a block.
+    def find(*args)
+      index.find(*args)
+    end
+
+    # `Trail#find_all` returns all matching paths including fallbacks and
+    #  shadowed matches.
     #
-    #     trail.find("hike", "hike/index") { |path| warn path }
+    #     trail.find_all("hike", "hike/index").each { |path| warn path }
     #
-    # This allows you to filter your matches by any condition.
+    # `find_all` returns an `Enumerator`. This allows you to filter your
+    # matches by any condition.
     #
-    #     trail.find("application") do |path|
-    #       return path if mime_type_for(path) == "text/css"
+    #     trail.find_all("application").find do |path|
+    #       mime_type_for(path) == "text/css"
     #     end
     #
-    def find(*args, &block)
-      cached.find(*args, &block)
+    def find_all(*args, &block)
+      cached.find_all(*args, &block)
     end
 
     # `Trail#cached` returns an `CachedTrail` object that has the same

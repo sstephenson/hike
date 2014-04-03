@@ -178,10 +178,7 @@ module TrailTests
   end
 
   def test_find_all_respects_path_order
-    results = []
-    trail.find("layouts/interstitial.html") do |path|
-      results << path
-    end
+    results = trail.find_all("layouts/interstitial.html").to_a
     assert_equal [
       fixture_path("app/views/layouts/interstitial.html.erb"),
       fixture_path("vendor/plugins/signal_id/app/views/layouts/interstitial.html.erb")
@@ -189,10 +186,7 @@ module TrailTests
   end
 
   def test_find_all_with_multiple_extensions_respects_extension_order
-    results = []
-    trail.find("application.js") do |path|
-      results << path
-    end
+    results = trail.find_all("application.js").to_a
     assert_equal [
       fixture_path("app/views/application.js.coffee.str"),
       fixture_path("app/views/application.js.coffee.erb")
