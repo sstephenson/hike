@@ -1,6 +1,6 @@
 require 'pathname'
+require 'hike/cached_trail'
 require 'hike/extensions'
-require 'hike/index'
 require 'hike/paths'
 
 module Hike
@@ -28,7 +28,7 @@ module Hike
     # allows you to require files with specifiying `foo.rb`.
     attr_reader :extensions
 
-    # `Index#aliases` is a mutable `Hash` mapping an extension to
+    # `Trail#aliases` is a mutable `Hash` mapping an extension to
     # an `Array` of aliases.
     #
     #   trail = Hike::Trail.new
@@ -136,26 +136,29 @@ module Hike
     #     end
     #
     def find(*args, &block)
-      index.find(*args, &block)
+      cached.find(*args, &block)
     end
 
-    # `Trail#index` returns an `Index` object that has the same
-    # interface as `Trail`. An `Index` is a cached `Trail` object that
+    # `Trail#cached` returns an `CachedTrail` object that has the same
+    # interface as `Trail`. An `CachedTrail` is a cached `Trail` object that
     # does not update when the file system changes. If you are
     # confident that you are not making changes the paths you are
-    # searching, `index` will avoid excess system calls.
+    # searching, `cached` will avoid excess system calls.
     #
-    #     index = trail.index
-    #     index.find "hike/trail"
-    #     index.find "test_trail"
+    #     cached = trail.cached
+    #     cached.find "hike/trail"
+    #     cached.find "test_trail"
     #
-    def index
-      Index.new(root, paths, extensions, aliases)
+    def cached
+      CachedTrail.new(root, paths, extensions, aliases)
     end
+
+    # Deprecated alias for `cached`.
+    alias_method :index, :cached
 
     # `Trail#entries` is equivalent to `Dir#entries`. It is not
     # recommend to use this method for general purposes. It exists for
-    # parity with `Index#entries`.
+    # parity with `CachedTrail#entries`.
     def entries(path)
       pathname = Pathname.new(path)
       if pathname.directory?
@@ -167,7 +170,7 @@ module Hike
 
     # `Trail#stat` is equivalent to `File#stat`. It is not
     # recommend to use this method for general purposes. It exists for
-    # parity with `Index#stat`.
+    # parity with `CachedTrail#stat`.
     def stat(path)
       if File.exist?(path)
         File.stat(path.to_s)
