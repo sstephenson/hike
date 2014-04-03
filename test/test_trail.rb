@@ -22,8 +22,8 @@ module TrailTests
     assert_equal [".builder", ".coffee", ".str", ".erb"], trail.extensions
   end
 
-  def test_index
-    assert_kind_of Hike::Index, trail.index
+  def test_cached
+    assert_kind_of Hike::CachedTrail, trail.cached
   end
 
   def test_find_nonexistent_file
@@ -271,7 +271,7 @@ class TrailTest < Hike::Test
   include TrailTests
 end
 
-class IndexTest < Hike::Test
+class CachedTrailTest < Hike::Test
   attr_reader :trail
 
   def new_trail
@@ -283,7 +283,7 @@ class IndexTest < Hike::Test
     trail.alias_extension "php", "html"
     trail.alias_extension "coffee", "js"
     yield trail if block_given?
-    trail.index
+    trail.cached
   end
 
   def setup
@@ -292,34 +292,34 @@ class IndexTest < Hike::Test
 
   include TrailTests
 
-  def test_changing_trail_path_doesnt_affect_index
+  def test_changing_trail_path_doesnt_affect_cache
     trail = Hike::Trail.new(FIXTURE_ROOT)
     trail.paths.push "."
 
-    index = trail.index
+    cached = trail.cached
 
     assert_equal [fixture_path(".")], trail.paths
-    assert_equal [fixture_path(".")], index.paths
+    assert_equal [fixture_path(".")], cached.paths
 
     trail.paths.push "app/views"
 
     assert_equal [fixture_path("."), fixture_path("app/views")], trail.paths
-    assert_equal [fixture_path(".")], index.paths
+    assert_equal [fixture_path(".")], cached.paths
   end
 
-  def test_changing_trail_extensions_doesnt_affect_index
+  def test_changing_trail_extensions_doesnt_affect_cache
     trail = Hike::Trail.new(FIXTURE_ROOT)
     trail.extensions.push "builder"
 
-    index = trail.index
+    cached = trail.cached
 
     assert_equal [".builder"], trail.extensions
-    assert_equal [".builder"], index.extensions
+    assert_equal [".builder"], cached.extensions
 
     trail.extensions.push "str"
 
     assert_equal [".builder", ".str"], trail.extensions
-    assert_equal [".builder"], index.extensions
+    assert_equal [".builder"], cached.extensions
   end
 
   def test_find_does_not_reflect_changes_in_the_file_system

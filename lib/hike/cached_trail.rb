@@ -1,22 +1,22 @@
 require 'pathname'
 
 module Hike
-  # `Index` is an internal cached variant of `Trail`. It assumes the
+  # `CachedTrail` is an internal cached variant of `Trail`. It assumes the
   # file system does not change between `find` calls. All `stat` and
-  # `entries` calls are cached for the lifetime of the `Index` object.
-  class Index
-    # `Index#paths` is an immutable `Paths` collection.
+  # `entries` calls are cached for the lifetime of the `CachedTrail` object.
+  class CachedTrail
+    # `CachedTrail#paths` is an immutable `Paths` collection.
     attr_reader :paths
 
-    # `Index#extensions` is an immutable `Extensions` collection.
+    # `CachedTrail#extensions` is an immutable `Extensions` collection.
     attr_reader :extensions
 
-    # `Index#aliases` is an immutable `Hash` mapping an extension to
+    # `CachedTrail#aliases` is an immutable `Hash` mapping an extension to
     # an `Array` of aliases.
     attr_reader :aliases
 
-    # `Index.new` is an internal method. Instead of constructing it
-    # directly, create a `Trail` and call `Trail#index`.
+    # `CachedTrail.new` is an internal method. Instead of constructing it
+    # directly, create a `Trail` and call `Trail#CachedTrail`.
     def initialize(root, paths, extensions, aliases)
       @root = root
 
@@ -35,18 +35,21 @@ module Hike
       @patterns = {}
     end
 
-    # `Index#root` returns root path as a `String`. This attribute is immutable.
+    # `CachedTrail#root` returns root path as a `String`. This attribute is immutable.
     def root
       @root.to_s
     end
 
-    # `Index#index` returns `self` to be compatable with the `Trail` interface.
-    def index
+    # `CachedTrail#cached` returns `self` to be compatable with the `Trail` interface.
+    def cached
       self
     end
 
+    # Deprecated alias for `cached`.
+    alias_method :index, :cached
+
     # The real implementation of `find`. `Trail#find` generates a one
-    # time index and delegates here.
+    # time cache and delegates here.
     #
     # See `Trail#find` for usage.
     def find(*logical_paths, &block)
