@@ -6,6 +6,8 @@ require 'hike/paths'
 module Hike
   # `Trail` is the public container class for holding paths and extensions.
   class Trail
+    include FileUtils
+
     # `Trail#paths` is a mutable `Paths` collection.
     #
     #     trail = Hike::Trail.new
@@ -159,29 +161,6 @@ module Hike
 
     # Deprecated alias for `cached`.
     alias_method :index, :cached
-
-    # `Trail#entries` is equivalent to `Dir#entries`. It is not
-    # recommend to use this method for general purposes. It exists for
-    # parity with `CachedTrail#entries`.
-    def entries(path)
-      pathname = Pathname.new(path)
-      if pathname.directory?
-        pathname.entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
-      else
-        []
-      end
-    end
-
-    # `Trail#stat` is equivalent to `File#stat`. It is not
-    # recommend to use this method for general purposes. It exists for
-    # parity with `CachedTrail#stat`.
-    def stat(path)
-      if File.exist?(path)
-        File.stat(path.to_s)
-      else
-        nil
-      end
-    end
 
     private
       def normalize_extension(extension)

@@ -206,18 +206,18 @@ module TrailTests
 
   def test_entries
     expected = [
-      Pathname.new("application.js.coffee.erb"),
-      Pathname.new("application.js.coffee.str"),
-      Pathname.new("index.html.erb"),
-      Pathname.new("index.php"),
-      Pathname.new("layouts"),
-      Pathname.new("people.coffee"),
-      Pathname.new("people.htm"),
-      Pathname.new("projects"),
-      Pathname.new("projects.erb"),
-      Pathname.new("recordings"),
+      "application.js.coffee.erb",
+      "application.js.coffee.str",
+      "index.html.erb",
+      "index.php",
+      "layouts",
+      "people.coffee",
+      "people.htm",
+      "projects",
+      "projects.erb",
+      "recordings",
     ]
-    assert_equal expected, trail.entries(fixture_path("app/views")).sort
+    assert_equal expected, trail.entries(fixture_path("app/views"))
   end
 
   def test_stat

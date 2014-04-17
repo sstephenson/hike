@@ -5,6 +5,8 @@ module Hike
   # file system does not change between `find` calls. All `stat` and
   # `entries` calls are cached for the lifetime of the `CachedTrail` object.
   class CachedTrail
+    include FileUtils
+
     # `CachedTrail#paths` is an immutable `Paths` collection.
     attr_reader :paths
 
@@ -83,14 +85,7 @@ module Hike
     # `~` swap files. Returns an empty `Array` if the directory does
     # not exist.
     def entries(path)
-      @entries[path.to_s] ||= begin
-        pathname = Pathname.new(path)
-        if pathname.directory?
-          pathname.entries.reject { |entry| entry.to_s =~ /^\.|~$|^\#.*\#$/ }.sort
-        else
-          []
-        end
-      end
+      @entries[path.to_s] ||= super
     end
 
     # A cached version of `File.stat`. Returns nil if the file does
@@ -99,10 +94,8 @@ module Hike
       key = path.to_s
       if @stats.key?(key)
         @stats[key]
-      elsif File.exist?(path)
-        @stats[key] = File.stat(path)
       else
-        @stats[key] = nil
+        @stats[key] = super
       end
     end
 
@@ -138,7 +131,7 @@ module Hike
         matches = entries(dirname)
 
         pattern = pattern_for(basename)
-        matches = matches.select { |m| m.to_s =~ pattern }
+        matches = matches.select { |m| m =~ pattern }
 
         sort_matches(matches, basename).each do |path|
           pathname = dirname.join(path)
@@ -190,7 +183,7 @@ module Hike
         aliases = find_aliases_for(basename.extname)
 
         matches.sort_by do |match|
-          extnames = match.sub(basename.to_s, '').to_s.scan(/\.[^.]+/)
+          extnames = match.sub(basename.to_s, '').scan(/\.[^.]+/)
           extnames.inject(0) do |sum, ext|
             if i = extensions.index(ext)
               sum + i + 1
