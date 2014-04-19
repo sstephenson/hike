@@ -1,5 +1,3 @@
-require 'pathname'
-
 module Hike
   # `CachedTrail` is an internal cached variant of `Trail`. It assumes the
   # file system does not change between `find` calls. All `stat` and
@@ -20,7 +18,7 @@ module Hike
     # `CachedTrail.new` is an internal method. Instead of constructing it
     # directly, create a `Trail` and call `Trail#CachedTrail`.
     def initialize(root, paths, extensions, aliases)
-      @root = root
+      @root = root.to_s
 
       # Freeze is used here so an error is throw if a mutator method
       # is called on the array. Mutating `@paths`, `@extensions`, or
@@ -30,7 +28,6 @@ module Hike
       @aliases    = aliases.inject({}) { |h, (k, a)|
                       h[k] = a.dup.freeze; h
                    }.freeze
-      @pathnames  = paths.map { |path| Pathname.new(path) }
 
       @stats    = {}
       @entries  = {}
@@ -38,9 +35,7 @@ module Hike
     end
 
     # `CachedTrail#root` returns root path as a `String`. This attribute is immutable.
-    def root
-      @root.to_s
-    end
+    attr_reader :root
 
     # `CachedTrail#cached` returns `self` to be compatable with the `Trail` interface.
     def cached
@@ -66,10 +61,10 @@ module Hike
       return to_enum(__method__, *logical_paths) unless block_given?
 
       options = extract_options!(logical_paths)
-      base_path = Pathname.new(options[:base_path] || @root)
+      base_path = (options[:base_path] || root).to_s
 
       logical_paths.each do |logical_path|
-        logical_path = Pathname.new(logical_path.sub(/^\//, ''))
+        logical_path = logical_path.sub(/^\//, '')
 
         if relative?(logical_path)
           find_in_base_path(logical_path, base_path, &block)
@@ -104,23 +99,23 @@ module Hike
         arguments.last.is_a?(Hash) ? arguments.pop.dup : {}
       end
 
-      def relative?(logical_path)
-        logical_path.to_s =~ /^\.\.?\//
+      def relative?(path)
+        path =~ /^\.\.?\//
       end
 
       # Finds logical path across all `paths`
       def find_in_paths(logical_path, &block)
-        dirname, basename = logical_path.split
-        @pathnames.each do |base_path|
-          match(base_path.join(dirname), basename, &block)
+        dirname, basename = File.split(logical_path)
+        @paths.each do |base_path|
+          match(File.expand_path(dirname, base_path), basename, &block)
         end
       end
 
       # Finds relative logical path, `../test/test_trail`. Requires a
       # `base_path` for reference.
       def find_in_base_path(logical_path, base_path, &block)
-        candidate = base_path.join(logical_path)
-        dirname, basename = candidate.split
+        candidate = File.expand_path(logical_path, base_path)
+        dirname, basename = File.split(candidate)
         match(dirname, basename, &block) if paths_contain?(dirname)
       end
 
@@ -134,21 +129,21 @@ module Hike
         matches = matches.select { |m| m =~ pattern }
 
         sort_matches(matches, basename).each do |path|
-          pathname = dirname.join(path)
+          filename = File.join(dirname, path)
 
           # Potential `stat` syscall
-          stat = stat(pathname)
+          stat = stat(filename)
 
           # Exclude directories
           if stat && stat.file?
-            yield pathname.to_s
+            yield filename
           end
         end
       end
 
       # Returns true if `dirname` is a subdirectory of any of the `paths`
       def paths_contain?(dirname)
-        paths.any? { |path| dirname.to_s[0, path.length] == path }
+        paths.any? { |path| dirname[0, path.length] == path }
       end
 
       # Cache results of `build_pattern_for`
@@ -160,16 +155,16 @@ module Hike
       #
       #     pattern_for("index.html") #=> /^index(.html|.htm)(.builder|.erb)*$/
       def build_pattern_for(basename)
-        extname = basename.extname
+        extname = File.extname(basename)
         aliases = find_aliases_for(extname)
 
         if aliases.any?
-          basename = basename.basename(extname)
+          basename = File.basename(basename, extname)
           aliases  = [extname] + aliases
           aliases_pattern = aliases.map { |e| Regexp.escape(e) }.join("|")
-          basename_re = Regexp.escape(basename.to_s) + "(?:#{aliases_pattern})"
+          basename_re = Regexp.escape(basename) + "(?:#{aliases_pattern})"
         else
-          basename_re = Regexp.escape(basename.to_s)
+          basename_re = Regexp.escape(basename)
         end
 
         extension_pattern = extensions.map { |e| Regexp.escape(e) }.join("|")
@@ -180,10 +175,10 @@ module Hike
       # priority. Extensions in the front of the `extensions` carry
       # more weight.
       def sort_matches(matches, basename)
-        aliases = find_aliases_for(basename.extname)
+        aliases = find_aliases_for(File.extname(basename))
 
         matches.sort_by do |match|
-          extnames = match.sub(basename.to_s, '').scan(/\.[^.]+/)
+          extnames = match.sub(basename, '').scan(/\.[^.]+/)
           extnames.inject(0) do |sum, ext|
             if i = extensions.index(ext)
               sum + i + 1
