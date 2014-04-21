@@ -32,9 +32,9 @@ module Hike
         (h[a] ||= []) << k; h
       }
 
-      @stats    = {}
-      @entries  = {}
-      @patterns = {}
+      @stats    = Hash.new { |h, k| h[k] = FileUtils.stat(k) }
+      @entries  = Hash.new { |h, k| h[k] = FileUtils.entries(k) }
+      @patterns = Hash.new { |h, k| h[k] = pattern_for(k) }
     end
 
     # `CachedTrail#root` returns root path as a `String`. This attribute is immutable.
@@ -83,17 +83,13 @@ module Hike
     # `~` swap files. Returns an empty `Array` if the directory does
     # not exist.
     def entries(path)
-      @entries[path] ||= super
+      @entries[path]
     end
 
     # A cached version of `File.stat`. Returns nil if the file does
     # not exist.
     def stat(path)
-      if @stats.key?(path)
-        @stats[path]
-      else
-        @stats[path] = super
-      end
+      @stats[path]
     end
 
     protected
@@ -125,16 +121,16 @@ module Hike
       # any syscalls if necessary.
       def match(dirname, basename)
         # Potential `entries` syscall
-        matches = entries(dirname)
+        matches = @entries[dirname]
 
-        pattern = pattern_for(basename)
+        pattern = @patterns[basename]
         matches = matches.select { |m| m =~ pattern }
 
         sort_matches(matches, basename).each do |path|
           filename = File.join(dirname, path)
 
           # Potential `stat` syscall
-          stat = stat(filename)
+          stat = @stats[filename]
 
           # Exclude directories
           if stat && stat.file?
@@ -148,15 +144,10 @@ module Hike
         paths.any? { |path| dirname[0, path.length] == path }
       end
 
-      # Cache results of `build_pattern_for`
-      def pattern_for(basename)
-        @patterns[basename] ||= build_pattern_for(basename)
-      end
-
       # Returns a `Regexp` that matches the allowed extensions.
       #
       #     pattern_for("index.html") #=> /^index(.html|.htm)(.builder|.erb)*$/
-      def build_pattern_for(basename)
+      def pattern_for(basename)
         extname = File.extname(basename)
         aliases = @reverse_aliases[extname]
 
