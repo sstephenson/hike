@@ -25,9 +25,12 @@ module Hike
       # `@aliases` would have unpredictable results.
       @paths      = paths.dup.freeze
       @extensions = extensions.dup.freeze
-      @aliases    = aliases.inject({}) { |h, (k, a)|
-                      h[k] = a.dup.freeze; h
-                   }.freeze
+
+      # Create a reverse mapping from extension to possible aliases.
+      @aliases = aliases.dup.freeze
+      @reverse_aliases = @aliases.inject({}) { |h, (k, a)|
+        (h[a] ||= []) << k; h
+      }
 
       @stats    = {}
       @entries  = {}
@@ -155,9 +158,9 @@ module Hike
       #     pattern_for("index.html") #=> /^index(.html|.htm)(.builder|.erb)*$/
       def build_pattern_for(basename)
         extname = File.extname(basename)
-        aliases = find_aliases_for(extname)
+        aliases = @reverse_aliases[extname]
 
-        if aliases.any?
+        if aliases
           basename = File.basename(basename, extname)
           aliases  = [extname] + aliases
           aliases_pattern = aliases.map { |e| Regexp.escape(e) }.join("|")
@@ -174,7 +177,8 @@ module Hike
       # priority. Extensions in the front of the `extensions` carry
       # more weight.
       def sort_matches(matches, basename)
-        aliases = find_aliases_for(File.extname(basename))
+        extname = File.extname(basename)
+        aliases = @reverse_aliases[extname] || []
 
         matches.sort_by do |match|
           extnames = match.sub(basename, '').scan(/\.[^.]+/)
@@ -187,13 +191,6 @@ module Hike
               sum
             end
           end
-        end
-      end
-
-      def find_aliases_for(extension)
-        @aliases.inject([]) do |aliases, (key, value)|
-          aliases.push(key) if value == extension
-          aliases
         end
       end
   end
