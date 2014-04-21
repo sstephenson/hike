@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
   s.name         = "hike"
-  s.version      = "2.1.1"
+  s.version      = "2.1.2"
   s.platform     = Gem::Platform::RUBY
   s.authors      = ["Sam Stephenson"]
   s.email        = ["sstephenson@gmail.com"]
