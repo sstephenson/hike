@@ -80,17 +80,16 @@ module Hike
     # `~` swap files. Returns an empty `Array` if the directory does
     # not exist.
     def entries(path)
-      @entries[path.to_s] ||= super
+      @entries[path] ||= super
     end
 
     # A cached version of `File.stat`. Returns nil if the file does
     # not exist.
     def stat(path)
-      key = path.to_s
-      if @stats.key?(key)
-        @stats[key]
+      if @stats.key?(path)
+        @stats[path]
       else
-        @stats[key] = super
+        @stats[path] = super
       end
     end
 
