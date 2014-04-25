@@ -1,5 +1,5 @@
 module Hike
-  VERSION = "2.1.2"
+  VERSION = "2.1.3"
 
   autoload :CachedTrail,     "hike/cached_trail"
   autoload :Extensions,      "hike/extensions"
