@@ -26,6 +26,14 @@ module TrailTests
     assert_kind_of Hike::CachedTrail, trail.cached
   end
 
+  def test_aliases
+    assert_equal [".htm", ".xhtml", ".php", ".coffee"], trail.aliases.keys
+    assert_equal [".html", ".html", ".html", ".js"], trail.aliases.values
+
+    assert_equal ".html", trail.aliases[".php"]
+    refute trail.aliases[".erb"]
+  end
+
   def test_find_nonexistent_file
     assert_nil trail.find("people/show.html")
   end

@@ -51,7 +51,7 @@ module Hike
       @root       = Pathname.new(root).expand_path
       @paths      = Paths.new(@root)
       @extensions = Extensions.new
-      @aliases    = Hash.new { |h, k| h[k] = Extensions.new }
+      @aliases    = {}
     end
 
     # `Trail#root` returns root path as a `String`. This attribute is immutable.
