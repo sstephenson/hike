@@ -1,6 +1,11 @@
 rvm:
   - 1.9.3
   - 2.0.0
+  - rbx-2
 
 notifications:
   disabled: true
+
+matrix:
+  allow_failures:
+    - rvm: rbx-2
